@@ -95,6 +95,8 @@ import LineChart from './LineChart';
 // back
 const remote = window.electron.remote;
 const { Socket } = remote.getGlobal('net');
+// const ffi = remote.getGlobal('ffi');
+const ffi = require('ffi-napi');
 
 // constant
 const size = 2048;
@@ -197,6 +199,12 @@ function genSeqArr(){
 
       // Socket method
       async openSocket(){
+        console.log(ffi)
+        // const lib = ffi.Library('libhello', {
+        //   'retHello': [String, []]
+        // });
+        // console.log(lib.hello());
+        return 0;
         if(this.socket !== null){
           return this.displayModal('error', `Current port: ${this.port}`);
         }
