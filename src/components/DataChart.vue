@@ -4,49 +4,20 @@
       <v-alert
       class="card"
       border="left"
-      type="error"
+      :type="modal.type"
       elevation="2"
       tile
-      v-if="err.show"
+      v-if="modal.show"
       >
-        {{ err.msg }}
+        {{ modal.msg }}
       </v-alert>
     </v-expand-transition>
 
-    <v-card
-    class="card"
-    tile
-    >
-      <v-sparkline
-      :value="data"
-      :color="options.dataColor"
-      :smooth="options.radian || false"
-      :line-width="options.width"
-      :fill="options.fill"
-      :type="options.type"
-      auto-draw
-      ></v-sparkline>
-    </v-card>
-
-    <v-card
-    class="card"
-    tile
-    >
-      <strong :style="{ 'margin': '20px' }">{{ wavePointData }}</strong>
-      <v-sparkline
-      :value="waveData"
-      :color="options.waveColor"
-      :smooth="options.radian || false"
-      :line-width="options.width"
-      :fill="options.fill"
-      :type="options.type"
-      auto-draw
-      zoomAndPan="magnify"
-      ></v-sparkline>
-    </v-card>
+    <line-chart :title="title[0]" :theme="0" :xData="xData" :yData="yData" :focus="true" @child="getWave"/>
+    <line-chart :title="title[1]" :theme="1" :xData="xData" :yData="waveData" :focus="false"/>
 
     <v-row>
-      <v-col cols="4">
+      <v-col cols="6">
         <v-card
         class="card"
         tile
@@ -66,7 +37,7 @@
             </v-text-field>
           </div>
 
-          <div class="btn" :style="{'textAlign': 'right'}">
+          <div class="btn">
             <v-btn
             color="success"
             icon
@@ -92,38 +63,22 @@
         class="card"
         tile
         >
+          <div class="data">{{ wavePointData }}</div>
+
           <v-expansion-panels accordion><v-expansion-panel>
           <v-expansion-panel-header>Recive Data</v-expansion-panel-header>
             <v-expansion-panel-content>
               <v-simple-table>
-                <!-- <template v-slot:default> -->
-                  
-                  <!-- <thead>
-                    <tr>
-                      <th>
-                        <v-btn
-                        text
-                        tile
-                        :style="{'padding': '5px'}"
-                        @click="displayData"
-                        >
-                          <v-icon left>refresh</v-icon>Recive Data
-                        </v-btn>
-                      </th>
-                    </tr>
-                  </thead> -->
-                  
-                  
+
                   <tbody>
                     <tr
-                    v-for="(item, idx) in data"
+                    v-for="(item, idx) in yData"
                     :key="idx"
                     >
                       <td :style="{'fontSize': '12px'}">{{ item }}</td>
                     </tr>
                   </tbody>
-                  
-                <!-- </template> -->
+
               </v-simple-table>
             </v-expansion-panel-content>
           </v-expansion-panel></v-expansion-panels>
@@ -134,46 +89,75 @@
 </template>
 
 <script>
+// front
+import LineChart from './LineChart';
+
+// back
 const remote = window.electron.remote;
 const { Socket } = remote.getGlobal('net');
-const JsonSocket = require('json-socket');
 
+// constant
 const size = 2048;
 
+function genRanArr(){
+  const tmp = [];
+  for(;;){
+    tmp.push(Math.round(Math.random()*10000)/100);
+    if(tmp.length === size) break;
+  }
+  return tmp;
+}
+function genZeroArr(){
+  const tmp = [];
+  for(let i=0; i<size; i++){
+    tmp.push(0);
+  }
+  return tmp;
+}
+function genSeqArr(){
+  const tmp = [];
+  for(let i=0; i<size; i++){
+    tmp.push(i);
+  }
+  return tmp;
+}
+
   export default {
+    components: { LineChart },
+    
     name: 'DataChart',
 
     data: () => ({
-      data: [],
-      // vData: [],
-      port: '',
-      host: '',
-      vPort: '',
-      vHost: '',
-      wave: '',
-      waveData: [],
-      // wavePointData: '',
+      // chart
+      title: ['Whole Wave', 'Focus'],
+      xData: genSeqArr(),
+      yData: genRanArr(),
+      timeData: [],
+      waveData: genZeroArr(),
+      wave: null,
 
+      // socket
+      port: null,
+      host: null,
+      
       socket: null,
+
+      // GUI
+      vPort: null,
+      vHost: null,
+
       disabled: {
         open: false,
         close: true
       },
 
-      err: {
+      modal: {
+        type: 'success',
         show: false,
         msg: ''
       },
 
-      options: {
-        dataColor: 'blue accent-3',
-        waveColor: 'red accent-3',
-        fill: false,
-        type: 'trend',
-        radian: 0,
-        width: 0.4
-      },
-
+      // rules
       rules: {
         port: [
           value => !!value || 'Required',
@@ -187,155 +171,107 @@ const size = 2048;
     }),
 
     methods: {
-      test(){
-        console.log(this.port);
+      // GUI method
+      disabledBtn(isOpen){
+        this.disabled.open = isOpen;
+        this.disabled.close = !isOpen;
       },
-      genRanArr(){
-        const tmp = [];
-        for(;;){
-          tmp.push(Math.round(Math.random()*10000)/100);
-          if(tmp.length === size) break;
-        }
-        return tmp;
+      displayModal(type, msg){
+        this.modal.show = true;
+        this.modal.type = type;
+        this.modal.msg = msg;
       },
-      genZeroArr(){
-        const tmp = [];
-        for(;;){
-          tmp.push(0);
-          if(tmp.length === size) break;
+      disableModal(){
+        setTimeout(() => { this.modal.show = false; }, 3000);
+      },
+
+      getWave(e){
+        const curr = Math.round(e);
+        if(curr === -1){
+          this.displayModal('warning', `Click invalid wave point`);
+          return -1;
         }
-        return tmp;
+        this.wave = curr;
+        this.title[1] = 'Focus: ' + curr.toString();
       },
 
       // Socket method
       async openSocket(){
         if(this.socket !== null){
-          // this.err.show = true;
-          this.err.msg = `current port: ${this.port}`;
-          return this.err.show = true;
-          // return alert(`current port: ${this.port}`);
+          return this.displayModal('error', `Current port: ${this.port}`);
         }
 
         if(this.vPort.length !== 4 || isNaN(this.vPort * 1)){
-          this.err.msg = `Input valid port(4 digit): ${this.vPort}`;
-          return this.err.show = true;
-          // return alert(`input 4 digit port: ${this.vPort}`);
+          return this.displayModal('error', `Input valid port(4 digit): ${this.vPort}`);
         }
-
-        // for(let i=0; i<2048; i++){
-        //   this.data = this.genRanArr();
-        //   console.log(this.data);
-        // }
         
         this.port = this.vPort * 1;
         this.host = this.vHost;
 
-        this.err.show = false;
+        // this.modal.show = false;
         this.disabledBtn(true);
 
-        this.socket = new JsonSocket(new Socket());
+        this.socket = new Socket();
         this.socket.connect(this.port, this.host);
-        // console.log(this.socket)
 
         this.socket.on('connect', () => {
-          this.socket.sendMessage({ success: true });
-          this.socket.on('message', (msg) => {
-            if(msg.format !== 'JSON'){
-              this.err.msg = `Use json`;
-              return this.err.show = true;
-              // return alert(`use json`);
-            }
-            // console.log(msg);
-            this.data = msg.data;
+          this.displayModal('success', `Success open port: ${this.vPort}`);
+          this.socket.write('true');
+
+          this.socket.on('data', (msg) => {
+            this.yData = msg.toString().split('\n');
           })
-        })
+        });
 
-        // this.socket = createServer((socket) => {
-        //   socket = new JsonSocket(socket);
-        //   socket.on('message', (msg) => {
-        //     if(msg.format !== 'JSON'){ return alert(`use json`); }
-        //     this.data = msg.data;
+        this.socket.on('error', (err) => {
+          this.displayModal('error', err);
+          this.closeSocket();
+        });
 
-        //     // if(this.point !== null){
-        //     //   this.genPointData();
-        //     // }
-
-        //     // console.log(this.data);
-        //   })
-        // });
-
-        // this.server.listen(this.port);
+        this.socket.on('timeout', () => {
+          this.displayModal('warning', `Socket timeout`);
+          this.closeSocket();
+        });
       },
 
       closeSocket(){
-        if(this.socket === null){ return alert(`current port is undefined`); }
+        if(this.socket === null){
+          return this.displayModal('error', `Current port is undefined`);
+        }
 
         this.socket.end();
         this.socket = null;
-        // if(this.server === null){ return alert(`current port is undefined`); }
-
-        // this.server.close();
-        // this.server = null;
-        // console.log(`port close`);
 
         this.disabledBtn(false);
       },
 
-      async takeWaveData(){
-        const focus = this.point;
-        this.pushData(this.pData, this.data[focus]);
-      },
-
       pushData(data, item){
-        // if(data[data.length-1]){
-        //   data.shift();
-        // }
-        // else{
-        //   data.shift();
-        //   data.push(item);
-        // }
         if(data.length >= size){ data.shift(); }
-        // data.shift();
         data.push(item);
       },
+    },
 
-      // GUI method
-      displayData(){
-        this.vData = this.data;
-      },
-
-      disabledBtn(isOpen){
-        this.disabled.open = isOpen;
-        this.disabled.close = !isOpen;
-      }
+    watch: {
+      // wave: function(){
+      //   console.log(this.wave);
+      // },
+      'modal.show': 'disableModal'
     },
 
     computed: {
       wavePointData: function(){
         const idx = this.wave;
-        const tmp = this.data[idx];
+        const tmp = this.yData[idx];
         this.pushData(this.waveData, tmp);
         return tmp;
       }
-    },
-    watch: {
-      // data: function(){
-      //   this.vData = this.data;
-
-      //   // const idx = this.wave;
-      //   // this.wavePointData = this.vData[idx];
-      //   // this.pushData(this.waveData, this.wavePointData);
-      // }
     },
 
     mounted() {
       this.wave = 1024;
       this.vPort = '1024';
       this.vHost = 'localhost';
-
-      this.data = this.genZeroArr();
-      this.waveData = this.data;
-      // this.genPointData();
+      this.title[1] = 'Focus: ' + this.wave.toString();
     }
   }
 </script>
@@ -344,10 +280,18 @@ const size = 2048;
   .card {
     margin: 10px;
   }
+
   .body {
     padding: 20px;
   }
+
+  .data {
+    padding: 10px 23px 10px 23px;
+    /* padding-left: 20px; */
+  }
+
   .btn {
     padding: 10px;
+    text-align: right;
   }
 </style>

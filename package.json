@@ -13,8 +13,8 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@arction/lcjs": "^3.0.1",
     "core-js": "^3.6.5",
-    "json-socket": "^0.3.0",
     "vue": "^2.6.11",
     "vuetify": "^2.4.0"
   },
