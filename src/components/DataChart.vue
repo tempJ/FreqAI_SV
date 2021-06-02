@@ -63,7 +63,7 @@
         class="card"
         tile
         >
-          <div class="data">{{ wavePointData }}</div>
+          <!-- <div class="data" v-for="w in wavePoint" :key="w">{{ w }}, </div> -->
 
           <v-expansion-panels accordion><v-expansion-panel>
           <v-expansion-panel-header>Recive Data</v-expansion-panel-header>
@@ -134,9 +134,10 @@ function genSeqArr(){
       title: ['Whole Wave', 'Focus'],
       xData: genSeqArr(),
       yData: genRanArr(),
-      timeData: [],
-      waveData: genZeroArr(),
-      wave: null,
+      timeData: [0],
+      waveData: [[], [], [], [], []],
+      wave: [],
+      idx: null,
 
       // socket
       port: null,
@@ -193,18 +194,23 @@ function genSeqArr(){
           this.displayModal('warning', `Click invalid wave point`);
           return -1;
         }
-        this.wave = curr;
-        this.title[1] = 'Focus: ' + curr.toString();
+        if(this.wave.length < 5){
+          this.wave.push(curr);
+        }
+        else{
+          this.wave[0] = curr;
+        }
+        pushSwitchLen(this.waveData, this.yData, this.wave);
       },
 
       // Socket method
       async openSocket(){
-        console.log(ffi)
-        // const lib = ffi.Library('libhello', {
-        //   'retHello': [String, []]
-        // });
-        // console.log(lib.hello());
-        return 0;
+        var libm = ffi.Library('SPdbUSBm', {
+          'spTestAllChannels': [ 'short', [ 'short' ] ]
+        });
+        // dll 위치는 project root(npm run/package.json이 있는 위치가 기본)
+        const a = libm.spTestAllChannels(1); // 2
+        console.log(a);return 0;
         if(this.socket !== null){
           return this.displayModal('error', `Current port: ${this.port}`);
         }
@@ -228,6 +234,7 @@ function genSeqArr(){
 
           this.socket.on('data', (msg) => {
             this.yData = msg.toString().split('\n');
+            pushSwitchLen(this.waveData, this.yData, this.wave);
           })
         });
 
@@ -257,29 +264,43 @@ function genSeqArr(){
         if(data.length >= size){ data.shift(); }
         data.push(item);
       },
+      pushSwitchLen(arr, data, idx){
+        const len = arr.length;
+        switch (len) {
+          case 5:
+            arr[4].push(data[idx[4]]);
+          case 4:
+            arr[3].push(data[idx[3]]);
+          case 3:
+            arr[2].push(data[idx[2]]);
+          case 2:
+            arr[1].push(data[idx[1]]);
+          case 1:
+            arr[0].push(data[idx[0]]);
+          default:
+            break;
+        }
+      },
     },
 
     watch: {
-      // wave: function(){
-      //   console.log(this.wave);
-      // },
       'modal.show': 'disableModal'
     },
 
     computed: {
-      wavePointData: function(){
-        const idx = this.wave;
-        const tmp = this.yData[idx];
-        this.pushData(this.waveData, tmp);
-        return tmp;
-      }
+      // wavePoint: function(){
+      //   const idx = this.wave;
+      //   const tmp = this.yData[idx];
+      //   this.pushData(this.waveData, tmp);
+      //   return tmp;
+      // }
     },
 
     mounted() {
-      this.wave = 1024;
+      // this.wave[0] = 1024;
       this.vPort = '1024';
       this.vHost = 'localhost';
-      this.title[1] = 'Focus: ' + this.wave.toString();
+      // this.title[1] = 'Focus: ' + this.wave.toString();
     }
   }
 </script>

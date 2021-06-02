@@ -46,15 +46,6 @@ const size = 2048;
           numberOfRows: 1,
         });
       },
-      createLegend() {
-        // this.legend = this.db.createLegendBoxPanel({
-        //   Width:50,
-        //   columnIndex: 0,
-        //   rowIndex: 0,
-        //   // columnSpan: 1,
-        //   // rowSpan: 1
-        // });
-      },
       createChart(){
         this.chart = this.db.createChartXY({
           columnIndex: 0,
@@ -68,7 +59,6 @@ const size = 2048;
             family: 'Roboto Condensed',
             weight: '300'
           }));
-        // console.log(this.chart.getTitleFont())
         if(this.focus){ this.chart.onSeriesBackgroundMouseClick(this.getWavePoint); }
       },
       createSeries(){

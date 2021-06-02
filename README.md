@@ -1,4 +1,4 @@
-# kspchart
+# kspChart
 
 ## Project setup
 ```

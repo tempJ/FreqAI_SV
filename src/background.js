@@ -6,7 +6,10 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const net = require('net');
+// const ffi = require('ffi-napi');
+
 global.net = net;
+// global.ffi = ffi;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
