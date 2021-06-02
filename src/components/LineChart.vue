@@ -29,7 +29,7 @@ const size = 2048;
       chart: null,
       series: null,
 
-      themeList: [Themes.dark, Themes.lavender]
+      themeList: [Themes.dark, Themes.light]
       // legend: null,
       
     }),

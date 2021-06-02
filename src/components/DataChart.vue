@@ -22,22 +22,25 @@
         class="card"
         tile
         >
-          <div class="body">
-            <v-text-field
-            label="Port"
-            :rules="rules.port"
-            v-model="vPort"
-            >{{ vPort }}
-            </v-text-field>
-            <v-text-field
-            label="Host"
-            :rules="rules.host"
-            v-model="vHost"
-            >{{ vHost }}
-            </v-text-field>
-          </div>
+          <!-- <div class="btn">
+            <v-btn
+            color="primary"
+            icon
+            :disabled="disabled.usb"
+            @click="openUsb"
+            >
+              <v-icon>usb</v-icon>
+            </v-btn>
+          </div> -->
 
           <div class="btn">
+            <v-btn
+            color="primary"
+            icon
+            @click="openUsb"
+            >
+              <v-icon>usb</v-icon>
+            </v-btn>
             <v-btn
             color="success"
             icon
@@ -55,7 +58,26 @@
               <v-icon>close</v-icon>
             </v-btn>
           </div>
+        </v-card>
 
+        <v-card
+        class="card"
+        tile
+        >
+          <div class="body">
+            <v-text-field
+            label="Port"
+            :rules="rules.port"
+            v-model="vPort"
+            >{{ vPort }}
+            </v-text-field>
+            <v-text-field
+            label="Host"
+            :rules="rules.host"
+            v-model="vHost"
+            >{{ vHost }}
+            </v-text-field>
+          </div>
         </v-card>
       </v-col>
       <v-col>
@@ -203,14 +225,16 @@ function genSeqArr(){
         pushSwitchLen(this.waveData, this.yData, this.wave);
       },
 
-      // Socket method
-      async openSocket(){
-        var libm = ffi.Library('SPdbUSBm', {
+      openUsb(){
+        const lib = ffi.Library('./src/libs/SPdbUSBm', {
           'spTestAllChannels': [ 'short', [ 'short' ] ]
         });
-        // dll 위치는 project root(npm run/package.json이 있는 위치가 기본)
-        const a = libm.spTestAllChannels(1); // 2
-        console.log(a);return 0;
+        console.log(lib.spTestAllChannels(1));
+        // this.disabledBtn(true);
+      },
+
+      // Socket method
+      async openSocket(){
         if(this.socket !== null){
           return this.displayModal('error', `Current port: ${this.port}`);
         }
