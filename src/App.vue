@@ -1,8 +1,8 @@
 <template>
   <v-app>
-    <v-app-bar
+    <!-- <v-app-bar
     color="primary"
-    ></v-app-bar>
+    ></v-app-bar> -->
 
     <v-main>
       <DataChart/>

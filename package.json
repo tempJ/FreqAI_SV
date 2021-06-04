@@ -17,6 +17,7 @@
     "core-js": "^3.6.5",
     "ffi-napi": "^4.0.3",
     "node-gyp-build": "^4.2.3",
+    "ref-napi": "^3.0.3",
     "vue": "^2.6.11",
     "vuetify": "^2.4.0"
   },

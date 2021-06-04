@@ -9,9 +9,21 @@
 </template>
 
 <script>
-import { FontSettings, lightningChart, Themes } from '@arction/lcjs';
-// const chartContainer = document.getElementById('chart-container');
+import {
+  lightningChart,
+  FontSettings,
+  SolidLine, SolidFill, ColorRGBA, Themes
+} from '@arction/lcjs';
+
 const size = 2048;
+const colorSet = [
+  ColorRGBA(41, 121, 255),
+  ColorRGBA(255, 23, 68),
+  ColorRGBA(0, 191, 165),
+  ColorRGBA(170, 0, 255),
+  ColorRGBA(84, 110, 122),
+  ColorRGBA(255, 143, 0)
+];
 
   export default {
     props: {
@@ -27,9 +39,10 @@ const size = 2048;
       chartId: null,
       db: null,
       chart: null,
-      series: null,
+      series: [],
+      strokeTheme: [],
 
-      themeList: [Themes.dark, Themes.light]
+      themeList: [Themes.light, Themes.light]
       // legend: null,
       
     }),
@@ -62,8 +75,21 @@ const size = 2048;
         if(this.focus){ this.chart.onSeriesBackgroundMouseClick(this.getWavePoint); }
       },
       createSeries(){
-        this.series = this.chart.addLineSeries();
-        this.series.add(this.genDataObj(this.xData, this.yData));
+        if(this.focus){
+          this.strokeTheme.push(new SolidLine({
+            fillStyle: new SolidFill({ color: colorSet[0] }),
+            thickness: 2
+          }));
+        }
+        else{
+          this.strokeTheme.push(new SolidLine({
+            fillStyle: new SolidFill({ color: colorSet[1] }),
+            thickness: 2
+          }));
+        }
+        this.series.push(this.chart.addLineSeries().setStrokeStyle(this.strokeTheme[0]));
+        this.series[0].add(this.genDataObj(this.xData, this.yData));
+
         // if(this.focus){ this.series.onMouseClick(this.getPoint); }
       },
       getWavePoint(obj, e){
@@ -73,10 +99,6 @@ const size = 2048;
         const onScale = near.location;
         this.$emit("child", onScale.x);
       },
-      // getPoint(obj, e){
-      //   // console.log(obj);
-      //   console.log(`series: ${e}`);
-      // },
 
       genDataObj(xArr, yArr){
         const tmp = [];
@@ -91,8 +113,38 @@ const size = 2048;
       },
 
       renderChart(){
-        if(this.focus) { this.series.clear(); }
-        this.series.add(this.genDataObj(this.xData, this.yData));
+        const len = this.series.length;
+
+        if(this.focus) { this.series[0].clear(); }
+        else if(len<5){
+          this.strokeTheme.push(new SolidLine({
+            fillStyle: new SolidFill({ color: colorSet[len] }),
+            thickness: 2
+          }));
+          this.series.push(
+            this.chart.addLineSeries()
+              .setStrokeStyle(this.strokeTheme[len-1])
+          );
+          // console.log(this.strokeTheme);
+        }
+        else{}
+        // this.series[0].add(this.genDataObj(this.xData, this.yData));
+        
+        // console.log(len)
+        switch (len) {
+          case 5:
+            this.series[4].add(this.genDataObj(this.xData, this.yData[4]));
+          case 4:
+            this.series[3].add(this.genDataObj(this.xData, this.yData[3]));
+          case 3:
+            this.series[2].add(this.genDataObj(this.xData, this.yData[2]));
+          case 2:
+            this.series[1].add(this.genDataObj(this.xData, this.yData[1]));
+          case 1:
+            this.series[0].add(this.genDataObj(this.xData, this.yData[0]));
+          default:
+            break;
+        }
       },
 
       pushData(data, item){
@@ -103,9 +155,9 @@ const size = 2048;
 
     watch: {
       'yData': 'renderChart',
-      title: function(){
-        this.chart.setTitle(this.title);
-      }
+      // title: function(){
+      //   this.chart.setTitle(this.title);
+      // }
     },
 
     computed: {
@@ -132,6 +184,6 @@ const size = 2048;
 
 <style scoped>
   .chart {
-    height: 350px;
+    height: 480px;
   }
 </style>

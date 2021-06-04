@@ -1,27 +1,74 @@
 <template>
+  <div
+  droppable="true"
+  @dragover="dragOver"
+  @drop="dropOn"
+  >
   <v-container>
-    <v-expand-transition>
-      <v-alert
-      class="card"
-      border="left"
-      :type="modal.type"
-      elevation="2"
-      tile
-      v-if="modal.show"
+    
+    <v-card
+    id="toolbar"
+    :draggable="draggable"
+    flat
+    tile
+    @dragstart="dragStart"
+    @drag="dragOn"
+    >
+      <v-toolbar
+      dense
+      floating
       >
-        {{ modal.msg }}
-      </v-alert>
-    </v-expand-transition>
+        <v-btn
+        color="primary"
+        icon
+        @click="checkChannel"
+        >
+          <v-icon>settings_power</v-icon>
+        </v-btn>
 
-    <line-chart :title="title[0]" :theme="0" :xData="xData" :yData="yData" :focus="true" @child="getWave"/>
-    <line-chart :title="title[1]" :theme="1" :xData="xData" :yData="waveData" :focus="false"/>
+        <v-btn
+        color="success"
+        icon
+        @click="getData"
+        >
+          <v-icon>slideshow</v-icon>
+        </v-btn>
+        <!-- <v-btn
+        color="primary"
+        icon
+        >
+          <v-icon>usb</v-icon>
+        </v-btn>
+        <v-btn
+        color="primary"
+        icon
+        @click="dataSave"
+        >
+          <v-icon>save</v-icon>
+        </v-btn> -->
+        <v-btn
+        icon
+        draggable="true"
+        @dragstart="draggable = true"
+        @drag="draggable = true"
+        @dragend="draggable = false"
+        >
+          <v-icon>open_with</v-icon>
+        </v-btn>
+      </v-toolbar>
+    </v-card>
 
-    <v-row>
+    <line-chart id="chart" :title="title[0]" :theme="0" :xData="xData" :yData="yData" :focus="true" @child="getWave"/>
+    <line-chart id="chart" :title="title[1]" :theme="1" :xData="xData" :yData="waveData" :focus="false"/>
+
+    
+
+    <!-- <v-row>
       <v-col cols="6">
         <v-card
         class="card"
         tile
-        >
+        > -->
           <!-- <div class="btn">
             <v-btn
             color="primary"
@@ -33,7 +80,7 @@
             </v-btn>
           </div> -->
 
-          <div class="btn">
+          <!-- <div class="btn">
             <v-btn
             color="primary"
             icon
@@ -58,9 +105,9 @@
               <v-icon>close</v-icon>
             </v-btn>
           </div>
-        </v-card>
+        </v-card> -->
 
-        <v-card
+        <!-- <v-card
         class="card"
         tile
         >
@@ -78,16 +125,16 @@
             >{{ vHost }}
             </v-text-field>
           </div>
-        </v-card>
-      </v-col>
-      <v-col>
+        </v-card> -->
+      <!-- </v-col> -->
+      <!-- <v-col>
         <v-card
         class="card"
         tile
-        >
+        > -->
           <!-- <div class="data" v-for="w in wavePoint" :key="w">{{ w }}, </div> -->
 
-          <v-expansion-panels accordion><v-expansion-panel>
+          <!-- <v-expansion-panels accordion><v-expansion-panel>
           <v-expansion-panel-header>Recive Data</v-expansion-panel-header>
             <v-expansion-panel-content>
               <v-simple-table>
@@ -103,25 +150,62 @@
 
               </v-simple-table>
             </v-expansion-panel-content>
-          </v-expansion-panel></v-expansion-panels>
-        </v-card>
-      </v-col>
-    </v-row>
+          </v-expansion-panel></v-expansion-panels> -->
+        <!-- </v-card>
+      </v-col> -->
+    <!-- </v-row> -->
+    
+    <v-overlay :value="overlay">
+      <v-expand-transition>
+        <v-alert
+        class="modal"
+        border="left"
+        :type="modal.type"
+        elevation="2"
+        tile
+        v-if="show"
+        >
+          {{ modal.msg }}
+        </v-alert>
+      </v-expand-transition>
+    </v-overlay>
   </v-container>
+  </div>
 </template>
 
 <script>
 // front
 import LineChart from './LineChart';
+// import ToolBar from './ToolBar';
+import ffi from 'ffi-napi';
+import ref from 'ref-napi';
 
 // back
-const remote = window.electron.remote;
-const { Socket } = remote.getGlobal('net');
-// const ffi = remote.getGlobal('ffi');
-const ffi = require('ffi-napi');
+// const remote = window.electron.remote;
+// const { Socket } = remote.getGlobal('net');
+// const ffi = require('ffi-napi');
 
 // constant
 const size = 2048;
+// const slot;
+
+const shortPtr = ref.refType(ref.types.short);
+const longPtr = ref.refType(ref.types.long);
+// const shortPtr = ref.refType(short);
+const SPdbUSBm = ffi.Library('./src/libs/SPdbUSBm', {
+  'spTestAllChannels': [ 'short', [ 'short' ] ],
+  'spGetAssignedChannelID': [ 'void', [ shortPtr ] ],
+  'spSetupGivenChannel': [ 'short', [ 'short' ] ],
+
+  // 'spReadChannelID': [ 'short', [ 'pointer', 'short' ] ],
+  
+  'spReadChannelID': [ 'short', [ shortPtr, 'short' ] ],
+  
+
+  'spCloseGivenChannel': [ 'short', [ 'short' ] ],
+  'spReadDataEx':  [ 'short', [ longPtr, 'short' ] ],
+  
+});
 
 function genRanArr(){
   const tmp = [];
@@ -162,53 +246,87 @@ function genSeqArr(){
       idx: null,
 
       // socket
-      port: null,
-      host: null,
+      // port: null,
+      // host: null,
       
-      socket: null,
+      // socket: null,
+
+      // USB
+      slotNum: null,
+      channel: null,
+      channelID: null,
 
       // GUI
-      vPort: null,
-      vHost: null,
+      show: false,
+      overlay: false,
+      draggable: false,
+      // droppable: false,
+      // vPort: null,
+      // vHost: null,
 
-      disabled: {
-        open: false,
-        close: true
-      },
+      // disabled: {
+      //   open: false,
+      //   close: true
+      // },
+      
 
       modal: {
         type: 'success',
-        show: false,
         msg: ''
       },
 
       // rules
       rules: {
-        port: [
-          value => !!value || 'Required',
-          value => (value && value.length === 4 && !isNaN(value*1)) || 'Input valid port number',
-        ],
-        host: [
-          value => !!value || 'Required',
-          value => (value && value.length < 16 && isNaN(value*1)) || 'Input valid host address',
-        ]
+        // port: [
+        //   value => !!value || 'Required',
+        //   value => (value && value.length === 4 && !isNaN(value*1)) || 'Input valid port number',
+        // ],
+        // host: [
+        //   value => !!value || 'Required',
+        //   value => (value && value.length < 16 && isNaN(value*1)) || 'Input valid host address',
+        // ]
       }
     }),
 
     methods: {
       // GUI method
-      disabledBtn(isOpen){
-        this.disabled.open = isOpen;
-        this.disabled.close = !isOpen;
-      },
+      // disabledBtn(isOpen){
+      //   this.disabled.open = isOpen;
+      //   this.disabled.close = !isOpen;
+      // },
       displayModal(type, msg){
-        this.modal.show = true;
         this.modal.type = type;
         this.modal.msg = msg;
+        this.show = !this.show;
+        this.overlay = !this.overlay;
       },
       disableModal(){
         setTimeout(() => { this.modal.show = false; }, 3000);
       },
+      dragStart(e){
+        const parent = e.target.parentElement.parentElement;
+        e.dataTransfer.setDragImage(parent, 0, 0);
+        e.dataTransfer.setData('targetId', parent.parentElement.id);
+      },
+      dragOn(e){
+      },
+      dragOver(e){
+        e.preventDefault();
+      },
+      dropOn(e){
+        
+        // e.target.appendChild(document.getElementById('container'));
+        const targetId = e.dataTransfer.getData('targetId');
+        e.preventDefault();
+        console.log(targetId);
+        e.target.appendChild(document.getElementById(targetId));
+        // e.target.appen
+        // const obj = e.dataTransfer.getData('text');
+        // e.target.appendChild(document.getElementById(obj));
+        // const obj = document.getElementById('toolbar');
+        // obj.insertBefore()
+      },
+      // startDrag
 
       getWave(e){
         const curr = Math.round(e);
@@ -222,72 +340,206 @@ function genSeqArr(){
         else{
           this.wave[0] = curr;
         }
-        pushSwitchLen(this.waveData, this.yData, this.wave);
+        this.pushSwitchLen(this.waveData, this.yData, this.wave);
       },
 
-      openUsb(){
-        const lib = ffi.Library('./src/libs/SPdbUSBm', {
-          'spTestAllChannels': [ 'short', [ 'short' ] ]
-        });
-        console.log(lib.spTestAllChannels(1));
-        // this.disabledBtn(true);
+      async checkChannel(){
+
+        // new Promise((resolve, reject) => {
+        //   this.slotNum = SPdbUSBm.spTestAllChannels(1);
+        //   resolve(this.slotNum);
+        // })
+        // .then((res) => {
+        //   if(res < 0){
+        //     return this.displayModal('error', `Failed check channel`);
+        //   }
+        //   this.channel = Buffer.alloc(res);
+        //   SPdbUSBm.spGetAssignedChannelID(this.channel);
+        //   console.log(this.channel);
+        // })
+
+        this.slotNum = await this.testChannel();
+        if(this.slotNum === -1){
+          return this.displayModal('error', `Failed check channel`);
+        }
+
+        this.channel = Buffer.alloc(this.slotNum);
+        await this.assignChannel(this.channel);
+        console.log(this.channel);
+
+        // for(const ch in this.channel)
+        // const len = this.channel.length;
+        for(let i=0; i<this.slotNum; i++){
+          console.log(this.channel[i])
+          let ret = await this.setupChannel(this.channel[i]);
+          if(ret < 0){
+            return this.displayModal('error', `Failed communication via the USB port`);
+          }
+          console.log(`ret: ${ret}`)
+
+          const tmp = Buffer.alloc(1);
+          ret = this.readChannel(tmp, this.channel[i]);
+          if(ret < 0){
+            return this.displayModal('error', `Failed communication via the USB port`);
+          }
+          // console.log(tmp);
+        }
+      },
+
+      async getData(){
+        // console.log(this.slotNum);
+        // console.log(this.channel);
+        if(this.slotNum === null){
+          return this.displayModal('error', `Plz get channel ID`);
+        }
+
+        let data = Buffer.alloc(size);
+        const ret = await this.readData(data, this.channel[0]);
+        if(ret < 0){
+          return this.displayModal('error', `Failed get data`);
+        }
+
+        console.log(data);
+      },
+
+      async testChannel(){
+        console.log('testChannel()');
+        return await SPdbUSBm.spTestAllChannels(1);
+      },
+
+      async assignChannel(p){
+        console.log('assignChannel()');
+        return await SPdbUSBm.spGetAssignedChannelID(p);
+      },
+
+      async setupChannel(ch){
+        const ret = await SPdbUSBm.spSetupGivenChannel(ch);
+        console.log('setupChannel()');
+        return ret;
+      },
+
+      async readChannel(p, ch){
+        const ret = await SPdbUSBm.spReadChannelID(p, ch);
+        console.log('readChannel()');
+        return console.log({ r, ret });
+      },
+
+      async readData(p, ch){
+        const ret = await SPdbUSBm.spReadDataEx(p, ch);
+        console.log('readData()');
+        return ret;
+      },
+
+      // async delay(){
+      //   const ret = await setTimeout(() => {
+      //     console.log('delay()');
+      //     // resolve(0);
+      //     // return 0;
+      //   }, 3000);
+      //   // console.log(ret);
+      //   return ret;
+      // },
+
+      // testChannel(){
+      //   return new Promise((resolve, reject) => {
+      //     const ret = SPdbUSBm.spTestAllChannels(1);
+      //     if(ret < 0){ reject(-1); }
+      //     else{ resolve(ret); }
+      //   })
+      // },
+
+      // assignChannel(p){
+      //   return new Promise((resolve) => {
+      //     SPdbUSBm.spGetAssignedChannelID(p);
+      //     resolve(1);
+      //   })
+      // },
+
+      // setupChannel(ch){
+      //   return new Promise((resolve, reject) => {
+      //     const r = this.delay();
+      //     console.log('setup');
+      //     const ret = SPdbUSBm.spSetupGivenChannel(ch);
+      //     if(ret < 0){ reject(-1); }
+      //     else{ resolve(ret, r); }
+      //   })
+      // },
+
+      // readChannel(p, ch){
+      //   return new Promise((resolve, reject) => {
+      //     console.log('read');
+      //     const ret = SPdbUSBm.spReadChannelID(p, ch);
+      //     if(ret < 0){ reject(-1); }
+      //     else{ resolve(ret); }
+      //   })
+      // },
+
+      // readData(p, ch){
+      //   return new Promise((resolve, reject) => {
+      //     const ret = SPdbUSBm.spReadDataEx(p, ch);
+      //     resolve(ret);
+      //   })
+      // },
+
+      dataSave(){
+
       },
 
       // Socket method
-      async openSocket(){
-        if(this.socket !== null){
-          return this.displayModal('error', `Current port: ${this.port}`);
-        }
+      // async openSocket(){
+      //   if(this.socket !== null){
+      //     return this.displayModal('error', `Current port: ${this.port}`);
+      //   }
 
-        if(this.vPort.length !== 4 || isNaN(this.vPort * 1)){
-          return this.displayModal('error', `Input valid port(4 digit): ${this.vPort}`);
-        }
+      //   if(this.vPort.length !== 4 || isNaN(this.vPort * 1)){
+      //     return this.displayModal('error', `Input valid port(4 digit): ${this.vPort}`);
+      //   }
         
-        this.port = this.vPort * 1;
-        this.host = this.vHost;
+      //   this.port = this.vPort * 1;
+      //   this.host = this.vHost;
 
-        // this.modal.show = false;
-        this.disabledBtn(true);
+      //   // this.modal.show = false;
+      //   this.disabledBtn(true);
 
-        this.socket = new Socket();
-        this.socket.connect(this.port, this.host);
+      //   this.socket = new Socket();
+      //   this.socket.connect(this.port, this.host);
 
-        this.socket.on('connect', () => {
-          this.displayModal('success', `Success open port: ${this.vPort}`);
-          this.socket.write('true');
+      //   this.socket.on('connect', () => {
+      //     this.displayModal('success', `Success open port: ${this.vPort}`);
+      //     this.socket.write('true');
 
-          this.socket.on('data', (msg) => {
-            this.yData = msg.toString().split('\n');
-            pushSwitchLen(this.waveData, this.yData, this.wave);
-          })
-        });
+      //     this.socket.on('data', (msg) => {
+      //       this.yData = msg.toString().split('\n');
+      //       this.pushSwitchLen(this.waveData, this.yData, this.wave);
+      //     })
+      //   });
 
-        this.socket.on('error', (err) => {
-          this.displayModal('error', err);
-          this.closeSocket();
-        });
+      //   this.socket.on('error', (err) => {
+      //     this.displayModal('error', err);
+      //     this.closeSocket();
+      //   });
 
-        this.socket.on('timeout', () => {
-          this.displayModal('warning', `Socket timeout`);
-          this.closeSocket();
-        });
-      },
+      //   this.socket.on('timeout', () => {
+      //     this.displayModal('warning', `Socket timeout`);
+      //     this.closeSocket();
+      //   });
+      // },
 
-      closeSocket(){
-        if(this.socket === null){
-          return this.displayModal('error', `Current port is undefined`);
-        }
+      // closeSocket(){
+      //   if(this.socket === null){
+      //     return this.displayModal('error', `Current port is undefined`);
+      //   }
 
-        this.socket.end();
-        this.socket = null;
+      //   this.socket.end();
+      //   this.socket = null;
 
-        this.disabledBtn(false);
-      },
+      //   this.disabledBtn(false);
+      // },
 
-      pushData(data, item){
-        if(data.length >= size){ data.shift(); }
-        data.push(item);
-      },
+      // pushData(data, item){
+      //   if(data.length >= size){ data.shift(); }
+      //   data.push(item);
+      // },
       pushSwitchLen(arr, data, idx){
         const len = arr.length;
         switch (len) {
@@ -308,7 +560,20 @@ function genSeqArr(){
     },
 
     watch: {
-      'modal.show': 'disableModal'
+      show(val){
+        // console.log('w')
+        // console.log(val);
+        val && setTimeout(() => {
+          this.show = false;
+        }, 3000);
+      },
+      // : 'disableModal',
+      overlay(val){
+        // console.log(val);
+        val && setTimeout(() => {
+          this.overlay = false;
+        }, 3000);
+      },
     },
 
     computed: {
@@ -322,14 +587,29 @@ function genSeqArr(){
 
     mounted() {
       // this.wave[0] = 1024;
-      this.vPort = '1024';
-      this.vHost = 'localhost';
+      // this.vPort = '1024';
+      // this.vHost = 'localhost';
       // this.title[1] = 'Focus: ' + this.wave.toString();
     }
   }
 </script>
 
 <style scoped>
+  #toolbar{
+    position: fixed;
+    z-index: 2;
+  }
+  #chart{
+    z-index: 1;
+  }
+  .modal{
+    width: 90vw;
+    position: fixed;
+    /* align: center; */
+    /* left: 50%; */
+    left: 4vw;
+    bottom: 10px;
+  }
   .card {
     margin: 10px;
   }
