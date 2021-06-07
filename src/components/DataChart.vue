@@ -183,28 +183,21 @@ import ref from 'ref-napi';
 // back
 // const remote = window.electron.remote;
 // const { Socket } = remote.getGlobal('net');
-// const ffi = require('ffi-napi');
 
 // constant
 const size = 2048;
-// const slot;
 
 const shortPtr = ref.refType(ref.types.short);
 const longPtr = ref.refType(ref.types.long);
-// const shortPtr = ref.refType(short);
 const SPdbUSBm = ffi.Library('./src/libs/SPdbUSBm', {
   'spTestAllChannels': [ 'short', [ 'short' ] ],
   'spGetAssignedChannelID': [ 'void', [ shortPtr ] ],
   'spSetupGivenChannel': [ 'short', [ 'short' ] ],
-
-  // 'spReadChannelID': [ 'short', [ 'pointer', 'short' ] ],
-  
   'spReadChannelID': [ 'short', [ shortPtr, 'short' ] ],
-  
-
   'spCloseGivenChannel': [ 'short', [ 'short' ] ],
   'spReadDataEx':  [ 'short', [ longPtr, 'short' ] ],
-  
+  'spInitAllChannels':  [ 'short', [ 'short' ] ],
+  'spSetIntEx':  [ 'short', [ 'long', 'short' ] ],
 });
 
 function genRanArr(){
@@ -358,32 +351,43 @@ function genSeqArr(){
         //   console.log(this.channel);
         // })
 
-        this.slotNum = await this.testChannel();
-        if(this.slotNum === -1){
-          return this.displayModal('error', `Failed check channel`);
-        }
+        // this.slotNum = await this.testChannel();
+        // if(this.slotNum < 0){
+        //   return this.displayModal('error', `Failed check channel`);
+        // }
 
-        this.channel = Buffer.alloc(this.slotNum);
-        await this.assignChannel(this.channel);
-        console.log(this.channel);
+        // this.channel = Buffer.alloc(this.slotNum);
+        
+        // await this.assignChannel(this.channel);
+        // console.log(this.channel);
 
-        // for(const ch in this.channel)
-        // const len = this.channel.length;
-        for(let i=0; i<this.slotNum; i++){
-          console.log(this.channel[i])
-          let ret = await this.setupChannel(this.channel[i]);
-          if(ret < 0){
-            return this.displayModal('error', `Failed communication via the USB port`);
-          }
-          console.log(`ret: ${ret}`)
+        // // for(const ch in this.channel)
+        // // const len = this.channel.length;
+        // for(let i=0; i<this.slotNum; i++){
+        //   // console.log(this.channel[i])
+        //   let ret = await this.setupChannel(this.channel[i]);
+        //   if(ret < 0){
+        //     return this.displayModal('error', `Failed communication via the USB port`);
+        //   }
+        //   // console.log(`ret: ${ret}`)
 
-          const tmp = Buffer.alloc(1);
-          ret = this.readChannel(tmp, this.channel[i]);
-          if(ret < 0){
-            return this.displayModal('error', `Failed communication via the USB port`);
-          }
-          // console.log(tmp);
-        }
+        //   const tmp = Buffer.alloc(1);
+        //   ret = await this.readChannel(tmp, this.channel[i]);
+        //   if(ret < 0){
+        //     return this.displayModal('error', `Failed communication via the USB port`);
+        //   }
+        //   // console.log(tmp);
+        // }
+        let ret = SPdbUSBm.spTestAllChannels(0);
+        console.log(ret);
+        ret = SPdbUSBm.spInitAllChannels(0);
+        console.log(ret);
+        ret = SPdbUSBm.spSetIntEx(25, 0);
+        console.log(ret);
+        let data = Buffer.alloc(size);
+        ret = SPdbUSBm.spReadDataEx(data, 0);
+        console.log(data);
+        // return ret;
       },
 
       async getData(){
@@ -394,6 +398,7 @@ function genSeqArr(){
         }
 
         let data = Buffer.alloc(size);
+        console.log(data);
         const ret = await this.readData(data, this.channel[0]);
         if(ret < 0){
           return this.displayModal('error', `Failed get data`);
@@ -403,13 +408,15 @@ function genSeqArr(){
       },
 
       async testChannel(){
+        const ret = await SPdbUSBm.spTestAllChannels(1);
         console.log('testChannel()');
-        return await SPdbUSBm.spTestAllChannels(1);
+        return ret;
       },
 
       async assignChannel(p){
+        const ret = await SPdbUSBm.spGetAssignedChannelID(p);
         console.log('assignChannel()');
-        return await SPdbUSBm.spGetAssignedChannelID(p);
+        return ret;
       },
 
       async setupChannel(ch){
@@ -421,7 +428,7 @@ function genSeqArr(){
       async readChannel(p, ch){
         const ret = await SPdbUSBm.spReadChannelID(p, ch);
         console.log('readChannel()');
-        return console.log({ r, ret });
+        return ret;
       },
 
       async readData(p, ch){
