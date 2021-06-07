@@ -1,65 +1,69 @@
-<template>
-  <div
-  droppable="true"
-  @dragover="dragOver"
-  @drop="dropOn"
-  >
-  <v-container>
-    
-    <v-card
-    id="toolbar"
-    :draggable="draggable"
-    flat
-    tile
-    @dragstart="dragStart"
-    @drag="dragOn"
-    >
-      <v-toolbar
-      dense
-      floating
+<template droppable="true">
+  
+    <v-container>
+      
+      <div
+      @dragover="dragOver"
+      @drop="dropOn"
       >
-        <v-btn
-        color="primary"
-        icon
-        @click="checkChannel"
+      <v-card
+      id="toolbar"
+      flat
+      tile
+      :draggable="draggable"
+      @dragstart="dragStart"
+      >
+      <!-- @drag="dragOn" -->
+        <v-toolbar
+        elevation="2"
+        dense
+        floating
         >
-          <v-icon>settings_power</v-icon>
-        </v-btn>
+          <v-btn
+          icon
+          draggable="true"
+          @dragstart="draggable = true"
+          @drag="draggable = true"
+          @dragend="draggable = false"
+          >
+            <v-icon>open_with</v-icon>
+          </v-btn>
 
-        <v-btn
-        color="success"
-        icon
-        @click="getData"
-        >
-          <v-icon>slideshow</v-icon>
-        </v-btn>
-        <!-- <v-btn
-        color="primary"
-        icon
-        >
-          <v-icon>usb</v-icon>
-        </v-btn>
-        <v-btn
-        color="primary"
-        icon
-        @click="dataSave"
-        >
-          <v-icon>save</v-icon>
-        </v-btn> -->
-        <v-btn
-        icon
-        draggable="true"
-        @dragstart="draggable = true"
-        @drag="draggable = true"
-        @dragend="draggable = false"
-        >
-          <v-icon>open_with</v-icon>
-        </v-btn>
-      </v-toolbar>
-    </v-card>
+          <v-btn
+          color="primary"
+          icon
+          @click="checkChannel"
+          >
+            <v-icon>settings_power</v-icon>
+          </v-btn>
 
-    <line-chart id="chart" :title="title[0]" :theme="0" :xData="xData" :yData="yData" :focus="true" @child="getWave"/>
-    <line-chart id="chart" :title="title[1]" :theme="1" :xData="xData" :yData="waveData" :focus="false"/>
+          <v-btn
+          color="success"
+          icon
+          @click="getData"
+          >
+            <v-icon>slideshow</v-icon>
+          </v-btn>
+          <!-- <v-btn
+          color="primary"
+          icon
+          >
+            <v-icon>usb</v-icon>
+          </v-btn>
+          <v-btn
+          color="primary"
+          icon
+          @click="dataSave"
+          >
+            <v-icon>save</v-icon>
+          </v-btn> -->
+          
+        </v-toolbar>
+      </v-card>
+      
+
+      <line-chart id="chart" :title="title[0]" :theme="0" :xData="xData" :yData="yData" :focus="true" @child="getWave"/>
+      <line-chart id="chart" :title="title[1]" :theme="1" :xData="xData" :yData="waveData" :focus="false"/>
 
     
 
@@ -155,22 +159,23 @@
       </v-col> -->
     <!-- </v-row> -->
     
-    <v-overlay :value="overlay">
-      <v-expand-transition>
-        <v-alert
-        class="modal"
-        border="left"
-        :type="modal.type"
-        elevation="2"
-        tile
-        v-if="show"
-        >
-          {{ modal.msg }}
-        </v-alert>
-      </v-expand-transition>
-    </v-overlay>
-  </v-container>
-  </div>
+      <v-overlay :value="overlay">
+        <v-expand-transition>
+          <v-alert
+          class="modal"
+          border="left"
+          :type="modal.type"
+          elevation="2"
+          tile
+          v-if="show"
+          >
+            {{ modal.msg }}
+          </v-alert>
+        </v-expand-transition>
+      </v-overlay>
+      </div>
+    </v-container>
+  
 </template>
 
 <script>
@@ -297,29 +302,37 @@ function genSeqArr(){
         setTimeout(() => { this.modal.show = false; }, 3000);
       },
       dragStart(e){
-        const parent = e.target.parentElement.parentElement;
-        e.dataTransfer.setDragImage(parent, 0, 0);
-        e.dataTransfer.setData('targetId', parent.parentElement.id);
+        const target = e.target.parentElement.parentElement.parentElement;
+        const targetId = target.id;
+        e.dataTransfer.setDragImage(target, 27, 25);
+        e.dataTransfer.setData('targetId', targetId);
+
+        const obj = document.getElementById(targetId);
+        const shiftX = e.clientX - obj.getBoundingClientRect().left;
+        const shiftY = e.clientY - obj.getBoundingClientRect().top;
+        e.dataTransfer.setData('shiftX', shiftX);
+        e.dataTransfer.setData('shiftY', shiftY);
       },
-      dragOn(e){
-      },
+      // dragOn(e){
+        
+      // },
       dragOver(e){
         e.preventDefault();
       },
       dropOn(e){
-        
-        // e.target.appendChild(document.getElementById('container'));
         const targetId = e.dataTransfer.getData('targetId');
+        const shiftX = e.dataTransfer.getData('shiftX');
+        const shiftY = e.dataTransfer.getData('shiftY');
+
         e.preventDefault();
-        console.log(targetId);
-        e.target.appendChild(document.getElementById(targetId));
-        // e.target.appen
-        // const obj = e.dataTransfer.getData('text');
-        // e.target.appendChild(document.getElementById(obj));
-        // const obj = document.getElementById('toolbar');
-        // obj.insertBefore()
+        this.moveAt(targetId, shiftX, shiftY, e.pageX, e.pageY);
       },
-      // startDrag
+      moveAt(targetId, shiftX, shiftY, pageX, pageY){
+        const obj = document.getElementById(targetId);
+        
+        obj.style.left = pageX - shiftX + 'px';
+        obj.style.top = pageY - shiftY + 'px';
+      },
 
       getWave(e){
         const curr = Math.round(e);
@@ -604,10 +617,11 @@ function genSeqArr(){
 <style scoped>
   #toolbar{
     position: fixed;
-    z-index: 2;
+    z-index: 1024;
+    background-color: rgba(255, 255, 255, 0);
   }
   #chart{
-    z-index: 1;
+    /* z-index: 1; */
   }
   .modal{
     width: 90vw;
