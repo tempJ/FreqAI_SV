@@ -1,71 +1,38 @@
 <template droppable="true">
-  
     <v-container>
-      
-      <div
+      <overlay-modal
+      :show="modal.show"
+      :type="modal.type"
+      :msg="modal.msg"
+      />
+      <!-- <div
       @dragover="dragOver"
       @drop="dropOn"
-      >
-      <v-card
-      id="toolbar"
-      flat
-      tile
-      :draggable="draggable"
-      @dragstart="dragStart"
-      >
-      <!-- @drag="dragOn" -->
-        <v-toolbar
-        elevation="2"
-        dense
-        floating
-        >
-          <v-btn
-          icon
-          draggable="true"
-          @dragstart="draggable = true"
-          @drag="draggable = true"
-          @dragend="draggable = false"
-          >
-            <v-icon>open_with</v-icon>
-          </v-btn>
+      > -->
+        <tool-bar
+        :chList="chList"
+        :saveDatas="saveDatas"
+        @init="initCh"
+        @get="getData"
+        @gets="getDatas"
+        @save="saveData"
+        @chIdx="getIdx"
+        />
 
-          <v-btn
-          color="primary"
-          icon
-          @click="checkChannel"
-          >
-            <v-icon>settings_power</v-icon>
-          </v-btn>
-
-          <v-btn
-          color="success"
-          icon
-          @click="getData"
-          >
-            <v-icon>slideshow</v-icon>
-          </v-btn>
-          <!-- <v-btn
-          color="primary"
-          icon
-          >
-            <v-icon>usb</v-icon>
-          </v-btn>
-          <v-btn
-          color="primary"
-          icon
-          @click="dataSave"
-          >
-            <v-icon>save</v-icon>
-          </v-btn> -->
-          
-        </v-toolbar>
-      </v-card>
-      
-
-      <line-chart id="chart" :title="title[0]" :theme="0" :xData="xData" :yData="yData" :focus="true" @child="getWave"/>
-      <line-chart id="chart" :title="title[1]" :theme="1" :xData="xData" :yData="waveData" :focus="false"/>
-
-    
+        <line-chart
+        :theme="0"
+        :xData="xData"
+        :yData="yData"
+        :focus="true"
+        @child="getWave"
+        />
+        
+        <line-chart
+        :theme="1"
+        :xData="xData"
+        :yData="waveData"
+        :focus="false"
+        />
 
     <!-- <v-row>
       <v-col cols="6">
@@ -159,29 +126,39 @@
       </v-col> -->
     <!-- </v-row> -->
     
-      <v-overlay :value="overlay">
-        <v-expand-transition>
-          <v-alert
-          class="modal"
-          border="left"
-          :type="modal.type"
-          elevation="2"
-          tile
-          v-if="show"
-          >
-            {{ modal.msg }}
-          </v-alert>
-        </v-expand-transition>
-      </v-overlay>
-      </div>
+      
+      <!-- </div> -->
+
+      <template>
+        <v-footer
+        fixed
+        color="rgba(255, 255, 255, 0)"
+        :style="{'padding': '0px'}"
+        >
+        
+          <div class="footer">
+            <config-set
+            @config="setConfig"
+            />
+          </div>
+          <!-- <v-spacer></v-spacer> -->
+          
+        </v-footer>
+      </template>
+      
+      
     </v-container>
   
 </template>
 
 <script>
-// front
+// component
+import ConfigSet from './ConfigSet';
 import LineChart from './LineChart';
-// import ToolBar from './ToolBar';
+import OverlayModal from './OverlayModal';
+import ToolBar from './ToolBar';
+
+// module
 import ffi from 'ffi-napi';
 import ref from 'ref-napi';
 
@@ -190,36 +167,22 @@ import ref from 'ref-napi';
 // const { Socket } = remote.getGlobal('net');
 
 // constant
-const size = 2048;
+const size = 2080;
 
 const shortPtr = ref.refType(ref.types.short);
 const longPtr = ref.refType(ref.types.long);
+
+// dll
 const SPdbUSBm = ffi.Library('./src/libs/SPdbUSBm', {
   'spTestAllChannels': [ 'short', [ 'short' ] ],
   'spGetAssignedChannelID': [ 'void', [ shortPtr ] ],
-  'spSetupGivenChannel': [ 'short', [ 'short' ] ],
-  'spReadChannelID': [ 'short', [ shortPtr, 'short' ] ],
-  'spCloseGivenChannel': [ 'short', [ 'short' ] ],
-  'spReadDataEx':  [ 'short', [ longPtr, 'short' ] ],
+  'spSetupAllChannels': [ 'short', [ ] ],
   'spInitAllChannels':  [ 'short', [ 'short' ] ],
   'spSetIntEx':  [ 'short', [ 'long', 'short' ] ],
+  'spCloseAllChannels': [ 'short', [ ] ],
+  'spReadDataEx':  [ 'short', [ longPtr, 'short' ] ],
 });
 
-function genRanArr(){
-  const tmp = [];
-  for(;;){
-    tmp.push(Math.round(Math.random()*10000)/100);
-    if(tmp.length === size) break;
-  }
-  return tmp;
-}
-function genZeroArr(){
-  const tmp = [];
-  for(let i=0; i<size; i++){
-    tmp.push(0);
-  }
-  return tmp;
-}
 function genSeqArr(){
   const tmp = [];
   for(let i=0; i<size; i++){
@@ -229,19 +192,23 @@ function genSeqArr(){
 }
 
   export default {
-    components: { LineChart },
+    components: { ToolBar, LineChart, ConfigSet, OverlayModal },
     
     name: 'DataChart',
 
     data: () => ({
+      isSave: false,
+
       // chart
-      title: ['Whole Wave', 'Focus'],
       xData: genSeqArr(),
-      yData: genRanArr(),
+      yData: new Array(size), 
       timeData: [0],
+      saveDatas: [],
       waveData: [[], [], [], [], []],
       wave: [],
       idx: null,
+
+      setIntervalTime: 100,
 
       // socket
       // port: null,
@@ -250,72 +217,33 @@ function genSeqArr(){
       // socket: null,
 
       // USB
-      slotNum: null,
+      // slotNum: null,
+      chIdx: null,
       channel: null,
-      channelID: null,
+      channels: null,
+      chLabel: 'Channel',
+      chList: [],
 
-      // GUI
-      show: false,
-      overlay: false,
-      draggable: false,
-      // droppable: false,
-      // vPort: null,
-      // vHost: null,
+      timerId: null,
 
-      // disabled: {
-      //   open: false,
-      //   close: true
-      // },
-      
-
+      // modal
       modal: {
+        show: false,
         type: 'success',
         msg: ''
       },
-
-      // rules
-      rules: {
-        // port: [
-        //   value => !!value || 'Required',
-        //   value => (value && value.length === 4 && !isNaN(value*1)) || 'Input valid port number',
-        // ],
-        // host: [
-        //   value => !!value || 'Required',
-        //   value => (value && value.length < 16 && isNaN(value*1)) || 'Input valid host address',
-        // ]
-      }
     }),
 
     methods: {
-      // GUI method
-      // disabledBtn(isOpen){
-      //   this.disabled.open = isOpen;
-      //   this.disabled.close = !isOpen;
-      // },
+      // Modal display and disable
       displayModal(type, msg){
+        this.modal.show = true;
         this.modal.type = type;
         this.modal.msg = msg;
-        this.show = !this.show;
-        this.overlay = !this.overlay;
+        // return -1;
       },
-      disableModal(){
-        setTimeout(() => { this.modal.show = false; }, 3000);
-      },
-      dragStart(e){
-        const target = e.target.parentElement.parentElement.parentElement;
-        const targetId = target.id;
-        e.dataTransfer.setDragImage(target, 27, 25);
-        e.dataTransfer.setData('targetId', targetId);
 
-        const obj = document.getElementById(targetId);
-        const shiftX = e.clientX - obj.getBoundingClientRect().left;
-        const shiftY = e.clientY - obj.getBoundingClientRect().top;
-        e.dataTransfer.setData('shiftX', shiftX);
-        e.dataTransfer.setData('shiftY', shiftY);
-      },
-      // dragOn(e){
-        
-      // },
+      // Toolbar drag and drop
       dragOver(e){
         e.preventDefault();
       },
@@ -334,92 +262,140 @@ function genSeqArr(){
         obj.style.top = pageY - shiftY + 'px';
       },
 
-      getWave(e){
-        const curr = Math.round(e);
-        if(curr === -1){
-          this.displayModal('warning', `Click invalid wave point`);
-          return -1;
-        }
-        if(this.wave.length < 5){
-          this.wave.push(curr);
-        }
-        else{
-          this.wave[0] = curr;
-        }
-        this.pushSwitchLen(this.waveData, this.yData, this.wave);
+      // Initialization
+      initAll(){
+        // this.slotNum = null;
+        this.channel = null;
+        this.channels = null;
+        this.chList = [];
       },
 
-      async checkChannel(){
+      // Buffer
+      allocBuffer(type, size){
+        let buffer;
 
-        // new Promise((resolve, reject) => {
-        //   this.slotNum = SPdbUSBm.spTestAllChannels(1);
-        //   resolve(this.slotNum);
-        // })
-        // .then((res) => {
-        //   if(res < 0){
-        //     return this.displayModal('error', `Failed check channel`);
-        //   }
-        //   this.channel = Buffer.alloc(res);
-        //   SPdbUSBm.spGetAssignedChannelID(this.channel);
-        //   console.log(this.channel);
-        // })
+        switch (type) {
+          case 'short':
+            buffer = Buffer.alloc(size*2);
+            break;
+          case 'long':
+            buffer = Buffer.alloc(size*4);
+            break;
+          default:
+            break;
+        }
 
-        // this.slotNum = await this.testChannel();
-        // if(this.slotNum < 0){
-        //   return this.displayModal('error', `Failed check channel`);
-        // }
+        return buffer;
+      },
+      buff2Arr(buff, type){
+        const size = buff.length;
+        if(size < 2){ return -1; }
+        if((size < 4) && (type === 'long')){ return -1; }
+        let arr8 = new Uint8Array(buff);
 
-        // this.channel = Buffer.alloc(this.slotNum);
-        
-        // await this.assignChannel(this.channel);
-        // console.log(this.channel);
+        let arr;
+        if(type === 'short'){
+          arr = new Int16Array(arr8.buffer);
+        }
+        else if(type === 'long'){
+          arr = new Int32Array(arr8.buffer);
+        }
+        else{
+          return -1;
+        }
 
-        // // for(const ch in this.channel)
-        // // const len = this.channel.length;
-        // for(let i=0; i<this.slotNum; i++){
-        //   // console.log(this.channel[i])
-        //   let ret = await this.setupChannel(this.channel[i]);
-        //   if(ret < 0){
-        //     return this.displayModal('error', `Failed communication via the USB port`);
-        //   }
-        //   // console.log(`ret: ${ret}`)
+        let ret = [];
+        arr.forEach((el) => {
+          ret.push(el);
+        })
 
-        //   const tmp = Buffer.alloc(1);
-        //   ret = await this.readChannel(tmp, this.channel[i]);
-        //   if(ret < 0){
-        //     return this.displayModal('error', `Failed communication via the USB port`);
-        //   }
-        //   // console.log(tmp);
-        // }
-        let ret = SPdbUSBm.spTestAllChannels(0);
-        console.log(ret);
-        ret = SPdbUSBm.spInitAllChannels(0);
-        console.log(ret);
-        ret = SPdbUSBm.spSetIntEx(25, 0);
-        console.log(ret);
-        let data = Buffer.alloc(size);
-        ret = SPdbUSBm.spReadDataEx(data, 0);
-        console.log(data);
-        // return ret;
+        return ret;
+      },
+      
+      /////////////////////////////////////////////////////////////////////////////////////////
+      // Toolbar
+      async initCh(e){
+        if(e){
+          const slot = await this.testChannel();
+          if(slot < 0){
+            this.initAll();
+            return this.displayModal('error', `Failed check channel`);
+          }
+
+          const ch = this.allocBuffer('short', slot);
+          
+          await this.assignChannel(ch);
+          this.channels = this.buff2Arr(ch, 'short');
+          
+          // if(this.channels.length <= 0){
+          //   this.initAll();
+          //   return this.displayModal('error', `Not found any channel`);
+          // }
+
+          this.channels.forEach((el) => {
+            this.chList.push('#ch' + el.toString());
+          })
+          
+          if(await this.setupChannel() < 0){
+            this.initAll();
+            return this.displayModal('error', `Failed communication via the USB port`);
+          }
+
+          if(await this.initChannel() < 0){
+            this.initAll();
+            return this.displayModal('error', `Failed initialization`);
+          }
+        }
+        else{
+          if(await this.closeChannel() >= 0){
+            this.initAll();
+            return this.displayModal('success', `Closed all channels`);
+          }
+        }
       },
 
       async getData(){
-        // console.log(this.slotNum);
-        // console.log(this.channel);
-        if(this.slotNum === null){
-          return this.displayModal('error', `Plz get channel ID`);
+        if(e){
+          const data = this.allocBuffer('long', size);
+          const ret = await this.readData(data, this.channels[this.chIdx]);
+          if(ret < 0){
+            return this.displayModal('error', `Failed get data`);
+          }
+          this.yData = this.buff2Arr(data, 'long');
         }
-
-        let data = Buffer.alloc(size);
-        console.log(data);
-        const ret = await this.readData(data, this.channel[0]);
-        if(ret < 0){
-          return this.displayModal('error', `Failed get data`);
-        }
-
-        console.log(data);
       },
 
+      async getDatas(e){
+        if(e){
+          this.timerId = setInterval(async () => {
+            const data = this.allocBuffer('long', size);
+            const ret = await this.readData(data, this.channels[this.chIdx]);
+            if(ret < 0){
+              return this.displayModal('error', `Failed get data`);
+            }
+            this.yData = this.buff2Arr(data, 'long');
+
+            if(this.isSave){
+              const timestamp = new Date().getTime();
+              this.saveDatas.push(timestamp.toString() + '\n' + this.yData.join('\n'));
+              // console.log(this.saveDatas[this.saveDatas.length - 1].length)
+            }
+          }, this.setIntervalTime);
+        }
+        else{
+          clearInterval(this.timerId);
+          this.timerId = null;
+        }
+      },
+
+      saveData(e){
+        this.isSave = e;
+        if(!e){
+          this.saveDatas = [];
+        }
+      },
+
+      // SPdbUSBm.dll
       async testChannel(){
         const ret = await SPdbUSBm.spTestAllChannels(1);
         console.log('testChannel()');
@@ -432,15 +408,27 @@ function genSeqArr(){
         return ret;
       },
 
-      async setupChannel(ch){
-        const ret = await SPdbUSBm.spSetupGivenChannel(ch);
+      async setupChannel(){
+        const ret = await SPdbUSBm.spSetupAllChannels();
         console.log('setupChannel()');
         return ret;
       },
 
-      async readChannel(p, ch){
-        const ret = await SPdbUSBm.spReadChannelID(p, ch);
-        console.log('readChannel()');
+      async initChannel(){
+        const ret = await SPdbUSBm.spInitAllChannels(0);
+        console.log('initChannel()');
+        return ret;
+      },
+
+      async closeChannel(){
+        const ret = await SPdbUSBm.spCloseAllChannels();
+        console.log('closeChannel()');
+        return ret;
+      },
+
+      async setIntegration(ch){
+        const ret = await SPdbUSBm.spSetIntEx(25, ch);
+        console.log('setIntegration()');
         return ret;
       },
 
@@ -448,61 +436,6 @@ function genSeqArr(){
         const ret = await SPdbUSBm.spReadDataEx(p, ch);
         console.log('readData()');
         return ret;
-      },
-
-      // async delay(){
-      //   const ret = await setTimeout(() => {
-      //     console.log('delay()');
-      //     // resolve(0);
-      //     // return 0;
-      //   }, 3000);
-      //   // console.log(ret);
-      //   return ret;
-      // },
-
-      // testChannel(){
-      //   return new Promise((resolve, reject) => {
-      //     const ret = SPdbUSBm.spTestAllChannels(1);
-      //     if(ret < 0){ reject(-1); }
-      //     else{ resolve(ret); }
-      //   })
-      // },
-
-      // assignChannel(p){
-      //   return new Promise((resolve) => {
-      //     SPdbUSBm.spGetAssignedChannelID(p);
-      //     resolve(1);
-      //   })
-      // },
-
-      // setupChannel(ch){
-      //   return new Promise((resolve, reject) => {
-      //     const r = this.delay();
-      //     console.log('setup');
-      //     const ret = SPdbUSBm.spSetupGivenChannel(ch);
-      //     if(ret < 0){ reject(-1); }
-      //     else{ resolve(ret, r); }
-      //   })
-      // },
-
-      // readChannel(p, ch){
-      //   return new Promise((resolve, reject) => {
-      //     console.log('read');
-      //     const ret = SPdbUSBm.spReadChannelID(p, ch);
-      //     if(ret < 0){ reject(-1); }
-      //     else{ resolve(ret); }
-      //   })
-      // },
-
-      // readData(p, ch){
-      //   return new Promise((resolve, reject) => {
-      //     const ret = SPdbUSBm.spReadDataEx(p, ch);
-      //     resolve(ret);
-      //   })
-      // },
-
-      dataSave(){
-
       },
 
       // Socket method
@@ -560,6 +493,38 @@ function genSeqArr(){
       //   if(data.length >= size){ data.shift(); }
       //   data.push(item);
       // },
+
+      ///////////////////////////////////////////////////////////////////////////////////////
+      setConfig(e){
+        this.setIntervalTime = e;
+      },
+      async getIdx(e){
+        this.chIdx = e;
+
+        // if(e < 0){
+        //   return this.displayModal('error', `Not found ${this.channel}`);
+        // }
+        if(e >= 0){
+          const ret = await this.setIntegration(this.channels[e]);
+          if(ret < 0){
+            return this.displayModal('error', `Failed set integration time`);
+          }
+        }
+      },
+      getWave(e){
+        const curr = Math.round(e);
+        if(curr === -1){
+          this.displayModal('warning', `Click invalid wave point`);
+          return -1;
+        }
+        if(this.wave.length < 5){
+          this.wave.push(curr);
+        }
+        else{
+          this.wave[0] = curr;
+        }
+        this.pushSwitchLen(this.waveData, this.yData, this.wave);
+      },
       pushSwitchLen(arr, data, idx){
         const len = arr.length;
         switch (len) {
@@ -580,20 +545,6 @@ function genSeqArr(){
     },
 
     watch: {
-      show(val){
-        // console.log('w')
-        // console.log(val);
-        val && setTimeout(() => {
-          this.show = false;
-        }, 3000);
-      },
-      // : 'disableModal',
-      overlay(val){
-        // console.log(val);
-        val && setTimeout(() => {
-          this.overlay = false;
-        }, 3000);
-      },
     },
 
     computed: {
@@ -617,20 +568,17 @@ function genSeqArr(){
 <style scoped>
   #toolbar{
     position: fixed;
-    z-index: 1024;
+    left: 30px;
+    top: 100px;
+    z-index: 1022;
     background-color: rgba(255, 255, 255, 0);
   }
-  #chart{
-    /* z-index: 1; */
-  }
-  .modal{
-    width: 90vw;
-    position: fixed;
-    /* align: center; */
-    /* left: 50%; */
-    left: 4vw;
-    bottom: 10px;
-  }
+
+  /* #select{
+    padding: 10px 10px 0px 0px;
+    width: 120px;
+  } */
+
   .card {
     margin: 10px;
   }
@@ -641,11 +589,14 @@ function genSeqArr(){
 
   .data {
     padding: 10px 23px 10px 23px;
-    /* padding-left: 20px; */
   }
 
   .btn {
     padding: 10px;
     text-align: right;
+  }
+
+  .footer{
+    margin-left: 50%;
   }
 </style>

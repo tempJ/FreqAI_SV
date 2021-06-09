@@ -11,7 +11,7 @@
 <script>
 import {
   lightningChart,
-  FontSettings,
+  // FontSettings,
   SolidLine, SolidFill, ColorRGBA, Themes
 } from '@arction/lcjs';
 
@@ -27,7 +27,6 @@ const colorSet = [
 
   export default {
     props: {
-      title: String,
       theme: Number,
       xData: Array,
       yData: Array,
@@ -43,8 +42,6 @@ const colorSet = [
       strokeTheme: [],
 
       themeList: [Themes.light, Themes.light]
-      // legend: null,
-      
     }),
 
     methods: {
@@ -65,14 +62,16 @@ const colorSet = [
           rowIndex: 0,
           // columnSpan: 1,
           // rowSpan:1
-        })
-          .setTitle(this.title)
-          .setTitleFont(new FontSettings({
-            size: 16,
-            family: 'Roboto Condensed',
-            weight: '300'
-          }));
-        if(this.focus){ this.chart.onSeriesBackgroundMouseClick(this.getWavePoint); }
+        });
+          // .setTitle(this.title)
+          // .setTitleFont(new FontSettings({
+          //   size: 16,
+          //   family: 'Roboto Condensed',
+          //   weight: '300'
+          // }));
+        if(this.focus){
+          this.chart.onSeriesBackgroundMouseClick(this.getWavePoint);
+        }
       },
       createSeries(){
         if(this.focus){
@@ -93,12 +92,48 @@ const colorSet = [
         // if(this.focus){ this.series.onMouseClick(this.getPoint); }
       },
       getWavePoint(obj, e){
-        const cursor = this.chart.engine.clientLocation2Engine(e.clientX, e.clientY);
-        const near = this.chart.solveNearest(cursor);
-        if(near === undefined) { return this.$emit("child", -1); };
-        const onScale = near.location;
-        this.$emit("child", onScale.x);
+        // console.log(obj);
+        const cursor = obj.engine.clientLocation2Engine(e.clientX, e.clientY);
+        const near = obj.solveNearest(cursor);
+        // console.log('getWavePoint:', near)
+        // const capture = this.chart;
+        // console.log(capture);
+        // const cursor = this.chart.engine.clientLocation2Engine(e.clientX, e.clientY);
+        // const near = capture.solveNearest(cursor);
+        // console.log('getWavePoint:', near)
+        if(near !== undefined){
+          const onScale = near.location;
+          this.$emit("child", Math.floor(onScale.x));
+        }
+        // const ts = this.chart.getSeries();
+        // console.log(ts)
+        // const y = this.yData;
+        // let arr = [0, 1];
+        // let ret = this.chart.getAxes(arr)
+        // console.log(arr)
+        // console.log(ret)
+        // const tmp = lightningChart().ChartXY();
+        // const s = tmp.addLineSeries();
+        // s = ts;
+        // const cursor = this.chart.engine.clientLocation2Engine(e.clientX, e.clientY);
+        // console.log('getWavePoint:', cursor)
+        // const near = tmp.solveNearest(cursor);
+
+        // console.log('getWavePoint:', near)
+        // if(near === undefined) { return this.$emit("child", -1); };
+        // const onScale = near.location;
+        // this.$emit("child", onScale.x);
       },
+      // getPoint(obj, e){
+      //   console.log('d')
+      //   console.log('getPoint:', obj)
+      //   console.log('getPoint:', e)
+      //   // const cursor = this.chart.engine.clientLocation2Engine(e.clientX, e.clientY);
+      //   // const near = this.chart.solveNearest(cursor);
+      //   // if(near === undefined) { return this.$emit("child", -1); };
+      //   // const onScale = near.location;
+      //   // this.$emit("child", onScale.x);
+      // },
 
       genDataObj(xArr, yArr){
         const tmp = [];
@@ -131,20 +166,24 @@ const colorSet = [
         // this.series[0].add(this.genDataObj(this.xData, this.yData));
         
         // console.log(len)
-        switch (len) {
-          case 5:
-            this.series[4].add(this.genDataObj(this.xData, this.yData[4]));
-          case 4:
-            this.series[3].add(this.genDataObj(this.xData, this.yData[3]));
-          case 3:
-            this.series[2].add(this.genDataObj(this.xData, this.yData[2]));
-          case 2:
-            this.series[1].add(this.genDataObj(this.xData, this.yData[1]));
-          case 1:
-            this.series[0].add(this.genDataObj(this.xData, this.yData[0]));
-          default:
-            break;
+        // console.log(this.yData);\
+        if(this.focus){
+          this.series[0].add(this.genDataObj(this.xData, this.yData));
         }
+        // switch (len) {
+        //   case 5:
+        //     this.series[4].add(this.genDataObj(this.xData, this.yData[4]));
+        //   case 4:
+        //     this.series[3].add(this.genDataObj(this.xData, this.yData[3]));
+        //   case 3:
+        //     this.series[2].add(this.genDataObj(this.xData, this.yData[2]));
+        //   case 2:
+        //     this.series[1].add(this.genDataObj(this.xData, this.yData[1]));
+        //   case 1:
+        //     this.series[0].add(this.genDataObj(this.xData, this.yData[0]));
+        //   default:
+        //     break;
+        // }
       },
 
       pushData(data, item){
