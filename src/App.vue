@@ -52,14 +52,14 @@
 <script>
 // import HelloWorld from './components/HelloWorld';
 import DataChart from './components/DataChart';
-import ConfigSet from './components/ConfigSet';
+// import ConfigSet from './components/ConfigSet';
 
 export default {
   name: 'App',
 
   components: {
     DataChart,
-    ConfigSet
+    // ConfigSet
   },
 
   data: () => ({

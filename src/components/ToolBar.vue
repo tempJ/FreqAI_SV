@@ -83,6 +83,7 @@ import fs from 'fs';
 
   export default {
     props: {
+      channel: String,
       chList: Array,
       saveDatas: Array
     },
@@ -104,7 +105,6 @@ import fs from 'fs';
       getsDisabled: true,
       saveDisabled: true,
 
-      channel: null,
       chLabel: 'Channel',
     }),
 
@@ -127,12 +127,10 @@ import fs from 'fs';
       initToolbar(isTrue = true){
         if(isTrue){
           this.initColor = 'success';
-          this.channel = null;
           this.chLabel = 'Channel';
         }
         else{
           this.initColor = 'error';
-          this.channel = this.chList[0];
           this.chLabel = null;
         }
 
@@ -192,17 +190,14 @@ import fs from 'fs';
         if(this.saveColor === 'error'){
           this.$emit("save", false);
 
-          const filePath = './public/csv';
+          const filePath = './saveData';
           const fileName = Math.round(new Date().getTime() / 1000);
           const data = this.saveDatas.join(',');
 
           fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
-            if(err !== null){
-              return this.displayModal('error', `Failed save data: ${err}`);
-            }
+            if(err !== null){ return -1; }
+            this.startSave(false);
           });
-
-          this.startSave(false);
         }
         else{
           this.$emit("save", true);
@@ -227,13 +222,8 @@ import fs from 'fs';
     background-color: rgba(255, 255, 255, 0);
   }
   #select{
-    /* padding: 10px; */
     margin: 0px 0px 0px 10px;
     padding: 10px 10px 0px 10px;
     width: 120px;
   }
-  /* #vertical{
-    /* height: 5px; */
-    /* margin: 10px 10px 10px 10px; */
-  /* } */
 </style>

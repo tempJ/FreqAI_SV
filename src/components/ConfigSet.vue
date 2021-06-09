@@ -1,54 +1,115 @@
 <template>
   <!-- <v-container> -->
-    <v-expansion-panels class="panel">
+    <v-expansion-panels
+    class="panel"
+    dense
+    tile
+    >
       <v-expansion-panel>
         <v-expansion-panel-header>Config</v-expansion-panel-header>
 
         <v-expansion-panel-content>
-            <v-col>
-              <p>Interval</p>
+          <v-row class="content">
+            <v-col cols="5">
+              <v-subheader>Interval</v-subheader>
+            </v-col>
+            <v-col cols="7">
               <v-text-field
+              class="input"
+              dense
+              filled
+              rounded
+              suffix="ms"
               v-model="vSetInterval"
               :rules="rules.interval"
               >
               </v-text-field>
             </v-col>
+          </v-row>
 
-            <v-col>
-              <p>Integration</p>
+          <v-divider class="divider"></v-divider>
+
+          <v-row class="content">
+            <v-col cols="5">
+              <v-subheader>Integration</v-subheader>
+            </v-col>
+            <v-col cols="7">
               <v-text-field
+              class="input"
+              dense
+              filled
+              rounded
+              suffix="ms"
               v-model="vIntegration"
               :rules="rules.integration"
               >
               </v-text-field>
             </v-col>
+          </v-row>
+
+            <!-- <v-row>
+              <v-col cols="6">
+                <v-subheader>Interval</v-subheader>
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                dense
+                filled
+                rounded
+                suffix="ms"
+                v-model="vSetInterval"
+                :rules="rules.interval"
+                >
+                </v-text-field>
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6">
+                <v-subheader>Integration</v-subheader>
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                dense
+                filled
+                rounded
+                suffix="ms"
+                v-model="vIntegration"
+                :rules="rules.integration"
+                >
+                </v-text-field>
+              </v-col>
+            </v-row> -->
 
             <div class="button">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn
-                  icon
+                  text
+                  rounded
                   color="success"
                   v-on="on"
                   v-bind="attrs"
                   @click="setConfig"
                   >
-                    <v-icon>settings</v-icon>
+                    <v-icon left>settings</v-icon>Set
                   </v-btn>
                 </template>
                 <span>Set config</span>
               </v-tooltip>
-
+              <!-- <v-spacer></v-spacer> -->
+              &nbsp;
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn
-                  icon
+                  text
+                  rounded
                   color="primary"
                   v-on="on"
                   v-bind="attrs"
                   @click="saveConfig"
                   >
-                    <v-icon>save</v-icon>
+                    <v-icon left>save</v-icon>Save
                   </v-btn>
                 </template>
                 <span>Save config to json file</span>
@@ -88,7 +149,7 @@ import fs from 'fs';
 
     methods: {
       createConfig(){
-        fs.readFile('./public/config.json', 'utf-8', (err, data) => {
+        fs.readFile('./config.json', 'utf-8', (err, data) => {
           if(err === null){
             const config = JSON.parse(data);
             this.vSetInterval = config.interval;
@@ -110,17 +171,12 @@ import fs from 'fs';
         let config = new Object();
         config.interval = this.vSetInterval;
         config.integration = this.vIntegration;
+        // const filePath = 'C:/Users/Administrator/Documents/kspChart/saveData';
 
-        fs.writeFile('./public/config.json', JSON.stringify(config), (err) => {
+        fs.writeFile('./config.json', JSON.stringify(config), (err) => {
           if(err !== null){ return -1; }
         });
       }
-    },
-
-    watch: {
-      // setIntervalTime: function(){
-      //   console.log(this.setIntervalTime)
-      // }
     },
 
     computed: {
@@ -141,20 +197,33 @@ import fs from 'fs';
 <style scoped>
 .panel {
   margin: 0px;
-  width: 460px;
+  width: 380px;
 }
-.container{
-  /* margin: 30px 0px 0px 0px; */
+/* .container{
   padding: 20px 20px 20px 20px;
-  
-  /* width: 100%; */
+} */
+
+.content {
+  /* height: 40px; */
+  margin: 0px;
+  padding: 0px;
 }
 
+.divider{
+  margin-bottom: 10px;
+}
+.input {
+  height: 30px;
+  /* align-items: center; */
+  /* text-align: center; */
+  font-size: 14px;
+}
 /* .footer{
   background-color: rgba(255, 255, 255, 0);
 } */
 
 .button{
+  /* margin: 20px; */
   text-align: right;
 }
 </style>

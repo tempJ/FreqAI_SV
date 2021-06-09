@@ -10,6 +10,7 @@
       @drop="dropOn"
       > -->
         <tool-bar
+        :channel="channel"
         :chList="chList"
         :saveDatas="saveDatas"
         @init="initCh"
@@ -20,18 +21,15 @@
         />
 
         <line-chart
-        :theme="0"
         :xData="xData"
         :yData="yData"
-        :focus="true"
         @child="getWave"
         />
         
-        <line-chart
-        :theme="1"
-        :xData="xData"
-        :yData="waveData"
-        :focus="false"
+        <wave-chart
+        :sIdx="sIdx"
+        :timeData="timeData"
+        :waveData="waveData"
         />
 
     <!-- <v-row>
@@ -155,6 +153,7 @@
 // component
 import ConfigSet from './ConfigSet';
 import LineChart from './LineChart';
+import WaveChart from './WaveChart';
 import OverlayModal from './OverlayModal';
 import ToolBar from './ToolBar';
 
@@ -192,7 +191,7 @@ function genSeqArr(){
 }
 
   export default {
-    components: { ToolBar, LineChart, ConfigSet, OverlayModal },
+    components: { ToolBar, LineChart, WaveChart, ConfigSet, OverlayModal },
     
     name: 'DataChart',
 
@@ -202,10 +201,13 @@ function genSeqArr(){
       // chart
       xData: genSeqArr(),
       yData: new Array(size), 
-      timeData: [0],
+      timeData: [],
       saveDatas: [],
+      // waveData1: [],
+      timeIdx: 0,
+      isWave: false,
       waveData: [[], [], [], [], []],
-      wave: [],
+      wave: new Array(5),
       idx: null,
 
       setIntervalTime: 100,
@@ -218,6 +220,7 @@ function genSeqArr(){
 
       // USB
       // slotNum: null,
+      sIdx: 0,
       chIdx: null,
       channel: null,
       channels: null,
@@ -335,6 +338,7 @@ function genSeqArr(){
           this.channels.forEach((el) => {
             this.chList.push('#ch' + el.toString());
           })
+          this.channel = this.chList[0];
           
           if(await this.setupChannel() < 0){
             this.initAll();
@@ -374,6 +378,35 @@ function genSeqArr(){
               return this.displayModal('error', `Failed get data`);
             }
             this.yData = this.buff2Arr(data, 'long');
+
+            if(this.isWave){
+              this.timeIdx++;
+              this.timeData.push(this.timeIdx);
+              // this.wave.forEach((w) => {
+              //   if(Number.isInteger(w)){}
+              // })
+              // for(let i=0; i<5; i++){
+              //   if(Number.isInteger(this.wave[i])){
+              //     this.waveData[i].push(this.yData[this.wave[i]]);
+              //   }
+              // }
+              this.waveData[0].push(this.yData[this.wave[0]]);
+              this.waveData[1].push(this.yData[this.wave[1]]);
+              this.waveData[2].push(this.yData[this.wave[2]]);
+              this.waveData[3].push(this.yData[this.wave[3]]);
+              this.waveData[4].push(this.yData[this.wave[4]]);
+            }
+            // this.wave.forEach((w) => {
+            //   if(Number.isInteger(w)){}
+            // })
+            // if(this.wave.length > 0){
+            //   this.timeIdx++;
+              // this.timeData = new Date().getTime() / (this.setIntervalTime * 1000);
+              this.timeData.push(this.timeIdx);
+              this.waveData[0].push(this.yData[this.wave[0]]);
+              // console.log(this.timeData)
+              // console.log(this.waveData)
+            // }
 
             if(this.isSave){
               const timestamp = new Date().getTime();
@@ -512,36 +545,38 @@ function genSeqArr(){
         }
       },
       getWave(e){
-        const curr = Math.round(e);
-        if(curr === -1){
-          this.displayModal('warning', `Click invalid wave point`);
-          return -1;
+        const curr = e;
+        if(curr < 0 || curr >= size){
+          return this.displayModal('warning', `Click invalid wave point`);
         }
-        if(this.wave.length < 5){
-          this.wave.push(curr);
-        }
-        else{
-          this.wave[0] = curr;
-        }
-        this.pushSwitchLen(this.waveData, this.yData, this.wave);
+        this.wave[this.sIdx] = curr;
+        this.isWave = true;
+        // if(this.wave.length < 5){
+        //   this.wave.push(curr);
+        // }
+        // else{
+        //   this.wave[0] = curr;
+        // }
+        // console.log(this.wave)
+        // this.pushSwitchLen(this.waveData, this.yData, this.wave);
       },
-      pushSwitchLen(arr, data, idx){
-        const len = arr.length;
-        switch (len) {
-          case 5:
-            arr[4].push(data[idx[4]]);
-          case 4:
-            arr[3].push(data[idx[3]]);
-          case 3:
-            arr[2].push(data[idx[2]]);
-          case 2:
-            arr[1].push(data[idx[1]]);
-          case 1:
-            arr[0].push(data[idx[0]]);
-          default:
-            break;
-        }
-      },
+      // pushSwitchLen(arr, data, idx){
+      //   const len = arr.length;
+      //   switch (len) {
+      //     case 5:
+      //       arr[4].push(data[idx[4]]);
+      //     case 4:
+      //       arr[3].push(data[idx[3]]);
+      //     case 3:
+      //       arr[2].push(data[idx[2]]);
+      //     case 2:
+      //       arr[1].push(data[idx[1]]);
+      //     case 1:
+      //       arr[0].push(data[idx[0]]);
+      //     default:
+      //       break;
+      //   }
+      // },
     },
 
     watch: {
