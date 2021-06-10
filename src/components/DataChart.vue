@@ -20,17 +20,26 @@
         @chIdx="getIdx"
         />
 
-        <line-chart
+        <!-- <line-chart
         :xData="xData"
         :yData="yData"
         @child="getWave"
+        /> -->
+
+        <line-chart
+        :data="data2080"
+        @wave="getWave"
+        />
+
+        <wave-chart
+        :data="data5"
         />
         
-        <wave-chart
+        <!-- <wave-chart
         :sIdx="sIdx"
         :timeData="timeData"
         :waveData="waveData"
-        />
+        /> -->
 
     <!-- <v-row>
       <v-col cols="6">
@@ -127,7 +136,7 @@
       
       <!-- </div> -->
 
-      <template>
+      <!-- <template>
         <v-footer
         fixed
         color="rgba(255, 255, 255, 0)"
@@ -139,10 +148,8 @@
             @config="setConfig"
             />
           </div>
-          <!-- <v-spacer></v-spacer> -->
-          
         </v-footer>
-      </template>
+      </template> -->
       
       
     </v-container>
@@ -151,11 +158,13 @@
 
 <script>
 // component
-import ConfigSet from './ConfigSet';
 import LineChart from './LineChart';
 import WaveChart from './WaveChart';
-import OverlayModal from './OverlayModal';
+
 import ToolBar from './ToolBar';
+import ConfigSet from './ConfigSet';
+
+import OverlayModal from './OverlayModal';
 
 // module
 import ffi from 'ffi-napi';
@@ -167,6 +176,7 @@ import ref from 'ref-napi';
 
 // constant
 const size = 2080;
+const xArr = genSeqArr();
 
 const shortPtr = ref.refType(ref.types.short);
 const longPtr = ref.refType(ref.types.long);
@@ -189,9 +199,20 @@ function genSeqArr(){
   }
   return tmp;
 }
+// function genZeroArr(){
+//   const tmp = [];
+//   for(let i=0; i<size; i++){
+//     tmp.push(0);
+//   }
+//   return tmp;
+// }
 
   export default {
-    components: { ToolBar, LineChart, WaveChart, ConfigSet, OverlayModal },
+    components: {
+      LineChart, WaveChart,
+      ToolBar, ConfigSet,
+      OverlayModal,
+    },
     
     name: 'DataChart',
 
@@ -199,18 +220,23 @@ function genSeqArr(){
       isSave: false,
 
       // chart
-      xData: genSeqArr(),
-      yData: new Array(size), 
+      // xData: new Array(size),
+      // yData: new Array(size),
+      // yData: genZeroArr(), 
+      data2080: null,
+      data5: null,
+      
       timeData: [],
       saveDatas: [],
       // waveData1: [],
       timeIdx: 0,
+      // isWave: [],
       isWave: false,
-      waveData: [[], [], [], [], []],
-      wave: new Array(5),
+      // waveData: [[], [], [], [], []],
+      wave5: new Array(5),
       idx: null,
 
-      setIntervalTime: 100,
+      setIntervalTime: null,
 
       // socket
       // port: null,
@@ -243,27 +269,26 @@ function genSeqArr(){
         this.modal.show = true;
         this.modal.type = type;
         this.modal.msg = msg;
-        // return -1;
       },
 
       // Toolbar drag and drop
-      dragOver(e){
-        e.preventDefault();
-      },
-      dropOn(e){
-        const targetId = e.dataTransfer.getData('targetId');
-        const shiftX = e.dataTransfer.getData('shiftX');
-        const shiftY = e.dataTransfer.getData('shiftY');
+      // dragOver(e){
+      //   e.preventDefault();
+      // },
+      // dropOn(e){
+      //   const targetId = e.dataTransfer.getData('targetId');
+      //   const shiftX = e.dataTransfer.getData('shiftX');
+      //   const shiftY = e.dataTransfer.getData('shiftY');
 
-        e.preventDefault();
-        this.moveAt(targetId, shiftX, shiftY, e.pageX, e.pageY);
-      },
-      moveAt(targetId, shiftX, shiftY, pageX, pageY){
-        const obj = document.getElementById(targetId);
+      //   e.preventDefault();
+      //   this.moveAt(targetId, shiftX, shiftY, e.pageX, e.pageY);
+      // },
+      // moveAt(targetId, shiftX, shiftY, pageX, pageY){
+      //   const obj = document.getElementById(targetId);
         
-        obj.style.left = pageX - shiftX + 'px';
-        obj.style.top = pageY - shiftY + 'px';
-      },
+      //   obj.style.left = pageX - shiftX + 'px';
+      //   obj.style.top = pageY - shiftY + 'px';
+      // },
 
       // Initialization
       initAll(){
@@ -377,40 +402,63 @@ function genSeqArr(){
             if(ret < 0){
               return this.displayModal('error', `Failed get data`);
             }
-            this.yData = this.buff2Arr(data, 'long');
+            const yArr = this.buff2Arr(data, 'long');
+            this.data2080 = this.genDataObj(xArr, yArr);
 
-            if(this.isWave){
-              this.timeIdx++;
-              this.timeData.push(this.timeIdx);
-              // this.wave.forEach((w) => {
-              //   if(Number.isInteger(w)){}
-              // })
-              // for(let i=0; i<5; i++){
-              //   if(Number.isInteger(this.wave[i])){
-              //     this.waveData[i].push(this.yData[this.wave[i]]);
-              //   }
-              // }
-              this.waveData[0].push(this.yData[this.wave[0]]);
-              this.waveData[1].push(this.yData[this.wave[1]]);
-              this.waveData[2].push(this.yData[this.wave[2]]);
-              this.waveData[3].push(this.yData[this.wave[3]]);
-              this.waveData[4].push(this.yData[this.wave[4]]);
-            }
+            if(this.isWave){ this.timeIdx++; }
+
+            this.wave5.forEach((w, i) => {
+              const t = this.timeIdx;
+              const y = yArr[w];
+              const tmp = new Object();
+              tmp.x = t;
+              tmp.y = y;
+              // this.waveData[i].push(this.);
+              this.data5[i].push(tmp);
+              // this.genDataObj()
+            })
+            
+            // if(this.isWave){
+            //   this.wave.forEach((w, i) => {
+                
+            //   })
+            // }
+            
+
+            // if(this.)
+
+            // if(this.isWave){
+            //   this.timeIdx++;
+            //   this.timeData.push(this.timeIdx);
+            //   // this.wave.forEach((w) => {
+            //   //   if(Number.isInteger(w)){}
+            //   // })
+            //   // for(let i=0; i<5; i++){
+            //   //   if(Number.isInteger(this.wave[i])){
+            //   //     this.waveData[i].push(this.yData[this.wave[i]]);
+            //   //   }
+            //   // }
+            //   this.waveData[0].push(this.yData[this.wave[0]]);
+            //   this.waveData[1].push(this.yData[this.wave[1]]);
+            //   this.waveData[2].push(this.yData[this.wave[2]]);
+            //   this.waveData[3].push(this.yData[this.wave[3]]);
+            //   this.waveData[4].push(this.yData[this.wave[4]]);
+            // }
             // this.wave.forEach((w) => {
             //   if(Number.isInteger(w)){}
             // })
             // if(this.wave.length > 0){
             //   this.timeIdx++;
               // this.timeData = new Date().getTime() / (this.setIntervalTime * 1000);
-              this.timeData.push(this.timeIdx);
-              this.waveData[0].push(this.yData[this.wave[0]]);
+              // this.timeData.push(this.timeIdx);
+              // this.waveData[0].push(this.yData[this.wave[0]]);
               // console.log(this.timeData)
               // console.log(this.waveData)
             // }
 
             if(this.isSave){
               const timestamp = new Date().getTime();
-              this.saveDatas.push(timestamp.toString() + '\n' + this.yData.join('\n'));
+              this.saveDatas.push(timestamp.toString() + '\r\n' + yArr.join('\r\n'));
               // console.log(this.saveDatas[this.saveDatas.length - 1].length)
             }
           }, this.setIntervalTime);
@@ -549,8 +597,9 @@ function genSeqArr(){
         if(curr < 0 || curr >= size){
           return this.displayModal('warning', `Click invalid wave point`);
         }
-        this.wave[this.sIdx] = curr;
-        this.isWave = true;
+        this.wave5[this.sIdx] = curr;
+        if(!this.isWave){ this.isWave = true; }
+        // this.isWave = true;
         // if(this.wave.length < 5){
         //   this.wave.push(curr);
         // }
@@ -559,6 +608,17 @@ function genSeqArr(){
         // }
         // console.log(this.wave)
         // this.pushSwitchLen(this.waveData, this.yData, this.wave);
+      },
+      genDataObj(xArr, yArr){
+        const tmp = [];
+        const len = xArr.length;
+        for(let i=0; i<len; i++){
+          const item = new Object();
+          item.x = xArr[i];
+          item.y = yArr[i];
+          tmp.push(item);
+        }
+        return tmp;
       },
       // pushSwitchLen(arr, data, idx){
       //   const len = arr.length;
@@ -579,19 +639,22 @@ function genSeqArr(){
       // },
     },
 
-    watch: {
-    },
+    // watch: {
+    // },
 
-    computed: {
-      // wavePoint: function(){
-      //   const idx = this.wave;
-      //   const tmp = this.yData[idx];
-      //   this.pushData(this.waveData, tmp);
-      //   return tmp;
-      // }
-    },
+    // computed: {
+    //   // wavePoint: function(){
+    //   //   const idx = this.wave;
+    //   //   const tmp = this.yData[idx];
+    //   //   this.pushData(this.waveData, tmp);
+    //   //   return tmp;
+    //   // }
+    // },
 
     mounted() {
+      this.data2080 = this.genDataObj(xArr, new Array(size));
+      this.data5 = [[], [], [], [], []];
+      // this.wave = Array.from(new Array(5), x => false);
       // this.wave[0] = 1024;
       // this.vPort = '1024';
       // this.vHost = 'localhost';
@@ -631,7 +694,7 @@ function genSeqArr(){
     text-align: right;
   }
 
-  .footer{
+  /* .footer{
     margin-left: 50%;
-  }
+  } */
 </style>

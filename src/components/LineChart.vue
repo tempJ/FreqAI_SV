@@ -27,8 +27,9 @@ const colorSet = [
 
   export default {
     props: {
-      xData: Array,
-      yData: Array,
+      data: Array,
+      // xData: Array,
+      // yData: Array,
     },
     name: 'LineChart',
 
@@ -61,6 +62,7 @@ const colorSet = [
           columnIndex: 0,
           rowIndex: 0,
         })
+          .disableAnimations(false)
           .setTitle('');
 
         this.chart.onSeriesBackgroundMouseClick(this.getWavePoint);
@@ -85,7 +87,10 @@ const colorSet = [
         }));
 
         this.series = this.chart.addLineSeries().setStrokeStyle(this.strokeTheme[0]);
-        this.series.add(this.genDataObj(this.xData, this.yData));
+        // console.log(this.data)
+        // this.series.add(this.data);
+        // console.log(this.data)
+        // this.series.add(this.genDataObj(this.xData, this.yData));
       },
 
       getWavePoint(obj, e){
@@ -93,30 +98,39 @@ const colorSet = [
         const near = obj.solveNearest(cursor);
         if(near !== undefined){
           const onScale = near.location;
-          this.$emit("child", Math.floor(onScale.x));
+          this.$emit("wave", Math.floor(onScale.x));
         }
       },
       
-      renderChart(){
-        this.series.clear();
-        this.series.add(this.genDataObj(this.xData, this.yData));
-      },
+      // renderChart(){
+      //   this.series.clear();
+      //   // this.series.add(this.genDataObj(this.xData, this.yData));
+      //   this.series.add(this.data);
+      // },
 
-      genDataObj(xArr, yArr){
-        const tmp = [];
-        const len = xArr.length;
-        for(let i=0; i<len; i++){
-          const item = new Object();
-          item.x = xArr[i];
-          item.y = parseInt(yArr[i]);
-          tmp.push(item);
-        }
-        return tmp;
-      },
+      // genDataObj(xArr, yArr){
+      //   const tmp = [];
+      //   const len = xArr.length;
+      //   for(let i=0; i<len; i++){
+      //     const item = new Object();
+      //     item.x = xArr[i];
+      //     item.y = parseInt(yArr[i]);
+      //     tmp.push(item);
+      //   }
+      //   return tmp;
+      // },
     },
 
     watch: {
-      'yData': 'renderChart',
+      // 'yData': 'renderChart',
+      data: {
+        deep: true,
+
+        handler(){
+          this.series.clear();
+          this.series.add(this.data);
+        }
+      }
     },
 
     computed: {

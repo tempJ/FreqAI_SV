@@ -27,8 +27,8 @@
             <v-icon>open_with</v-icon>
           </v-btn>
           <v-btn
-          :color="initColor"
           icon
+          :color="initColor"
           @click="initChannel"
           >
             <v-icon>settings_power</v-icon>
@@ -194,10 +194,14 @@ import fs from 'fs';
           const fileName = Math.round(new Date().getTime() / 1000);
           const data = this.saveDatas.join(',');
 
-          fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
-            if(err !== null){ return -1; }
-            this.startSave(false);
+          fs.mkdir(`${filePath}`, () => {
+            fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
+              if(err !== null){ return -1; }
+              this.startSave(false);
+            });
           });
+
+          
         }
         else{
           this.$emit("save", true);

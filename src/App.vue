@@ -1,11 +1,73 @@
 <template>
+  
   <v-app>
-    
+    <!-- <div class="ma-12 pa-12"> -->
     <div
     @dragover="dragOver"
     @drop="dropOn"
     >
+    <v-card>
+      <v-navigation-drawer
+        permanent
+        expand-on-hover
+      >
+        <v-list>
+          <v-list-item class="px-2">
+            <v-list-item-avatar>
+              <v-img src="https://randomuser.me/api/portraits/women/85.jpg"></v-img>
+            </v-list-item-avatar>
+          </v-list-item>
 
+          <v-list-item link>
+            <v-list-item-content>
+              <v-list-item-title class="text-h6">
+                Sandra Adams
+              </v-list-item-title>
+              <v-list-item-subtitle>sandra_a88@gmail.com</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+
+        <v-divider></v-divider>
+
+        <v-list>
+          <config-set
+          @config="setConfig"
+          />
+        </v-list>
+        <!-- <div class="footer">
+          
+        </div> -->
+
+        <!-- <v-list
+          nav
+          dense
+        >
+          <v-list-item link>
+            <v-list-item-icon>
+              <v-icon>mdi-folder</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>My Files</v-list-item-title>
+          </v-list-item>
+          <v-list-item link>
+            <v-list-item-icon>
+              <v-icon>mdi-account-multiple</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Shared with me</v-list-item-title>
+          </v-list-item>
+          <v-list-item link>
+            <v-list-item-icon>
+              <v-icon>mdi-star</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Starred</v-list-item-title>
+          </v-list-item>
+        </v-list> -->
+      </v-navigation-drawer>
+    </v-card>
+  <!-- </div> -->
+
+    
+    
     
     <!-- <v-card
     dense
@@ -20,7 +82,7 @@
         <template v-slot:extension>
           <v-tabs
           v-model="tabPage"
-          align-with-title
+          align-with-t  itle
           >
             <v-tabs-slider></v-tabs-slider>
 
@@ -41,7 +103,7 @@
     >
       <v-tab-item> -->
         <v-main>
-            <DataChart/>
+          <DataChart/>
         </v-main>
       <!-- </v-tab-item>
     </v-tabs-items> -->
@@ -50,22 +112,20 @@
 </template>
 
 <script>
-// import HelloWorld from './components/HelloWorld';
 import DataChart from './components/DataChart';
-// import ConfigSet from './components/ConfigSet';
+import ConfigSet from './components/ConfigSet';
 
 export default {
   name: 'App',
 
   components: {
+    ConfigSet,
     DataChart,
-    // ConfigSet
   },
 
   data: () => ({
-    tabPage: null,
-    // tabs: [DataChart, ConfigSet],
-    tabList: ['Chart']
+    // tabPage: null,
+    // tabList: ['Chart']
   }),
 
   methods: {
@@ -89,3 +149,12 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+  .footer{
+    position: fixed;
+    /* background-color: rgba(255, 255, 255, 0); */
+    /* :style="{'padding': '0px'}" */
+    /* margin-left: 50%; */
+  }
+</style>

@@ -1,6 +1,6 @@
 <template>
   <!-- <v-container> -->
-    <v-expansion-panels
+    <!-- <v-expansion-panels
     class="panel"
     dense
     tile
@@ -8,7 +8,7 @@
       <v-expansion-panel>
         <v-expansion-panel-header>Config</v-expansion-panel-header>
 
-        <v-expansion-panel-content>
+        <v-expansion-panel-content> -->
           <v-row class="content">
             <v-col cols="5">
               <v-subheader>Interval</v-subheader>
@@ -80,7 +80,25 @@
                 </v-text-field>
               </v-col>
             </v-row> -->
-
+            <div class="button">
+              <v-btn
+              text
+              rounded
+              color="success"
+              @click="setConfig"
+              >
+                <v-icon left>settings</v-icon>Set
+              </v-btn>
+              <v-btn
+              text
+              rounded
+              color="primary"
+              @click="saveConfig"
+              >
+                <v-icon left>save</v-icon>Save
+              </v-btn>
+            </div>
+            <!-- <v-row>
             <div class="button">
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
@@ -91,13 +109,13 @@
                   v-on="on"
                   v-bind="attrs"
                   @click="setConfig"
-                  >
-                    <v-icon left>settings</v-icon>Set
+                  > -->
+                    <!-- <v-icon left>settings</v-icon>Set
                   </v-btn>
                 </template>
                 <span>Set config</span>
               </v-tooltip>
-              <!-- <v-spacer></v-spacer> -->
+              <v-spacer></v-spacer>
               &nbsp;
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
@@ -115,11 +133,11 @@
                 <span>Save config to json file</span>
               </v-tooltip>
             </div>
-            
+            </v-row> -->
           <!-- </v-card> -->
-        </v-expansion-panel-content>
+        <!-- </v-expansion-panel-content>
       </v-expansion-panel>
-    </v-expansion-panels>
+    </v-expansion-panels> -->
   <!-- </v-container> -->
 </template>
 
@@ -160,10 +178,14 @@ import fs from 'fs';
             this.vSetInterval = '100';
             this.vIntegration = '1000';
           }
+
+          this.$emit("config", parseInt(this.vSetInterval));
         });
       },
 
       setConfig(){
+        // console.log(this.setIntervalTime)
+        // console.log(this.setIntervalTime)
         this.$emit("config", this.setIntervalTime);
       },
 

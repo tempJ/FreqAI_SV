@@ -1,15 +1,19 @@
 <template>
   <v-overlay
-  :value="isShow"
+  :value="alert"
   >
     <v-expand-transition>
       <v-alert
+      dense
+      dismissible
       class="modal"
       border="left"
       :type="type"
       elevation="2"
-      v-if="isShow"
+      v-model="alert"
+      
       >
+      <!-- v-if="isShow" -->
         {{ msg }}
       </v-alert>
     </v-expand-transition>
@@ -26,7 +30,8 @@
     name: 'OverlayModal',
 
     data: () => ({
-      isShow: false
+      // isShow: false
+      alert: false,
     }),
 
     methods: {
@@ -38,21 +43,30 @@
       //   return -1;
       // },
 
-      disableModal(){
-        setTimeout(() => { this.show = false; }, 3000);
-      },
+      // disableModal(){
+      //   setTimeout(() => { this.show = false; }, 3000);
+      // },
     },
 
     watch: {
       show(val){
-        // console.log(val)
+        console.log(val)
         if(val){
-          this.isShow = true;
+          // this.isShow = true;
+          this.alert = true;
           setTimeout(() => {
-            this.isShow = false;
+            this.alert = false;
+            // this.isShow = false;
           }, 3000);
         }
       },
+      alert(val){
+        setTimeout(() => {
+          this.alert = false;
+          // this.isShow = false;
+        }, 3000);
+        // if(!)
+      }
       // overlay(val){
       //   val && setTimeout(() => {
       //     this.overlay = false;
@@ -66,7 +80,7 @@
   .modal{
     width: 90vw;
     position: fixed;
-    z-index: 1024;
+    z-index: 2048;
     left: 4vw;
     bottom: 10px;
   }
