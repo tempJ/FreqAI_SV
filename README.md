@@ -1,4 +1,4 @@
-# kspChart
+# FreqAI_SV
 
 ## Project setup
 ```
