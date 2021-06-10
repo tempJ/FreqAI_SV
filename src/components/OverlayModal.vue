@@ -78,10 +78,10 @@
 
 <style scoped>
   .modal{
-    width: 90vw;
+    width: 30vw;
     position: fixed;
     z-index: 2048;
-    left: 4vw;
+    left: 40vw;
     bottom: 10px;
   }
 </style>

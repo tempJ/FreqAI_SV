@@ -18,13 +18,14 @@
           <v-btn
           icon
           plain
+          width="20px"
           color="secondary"
           draggable="true"
           @dragstart="draggable = true"
           @drag="draggable = true"
           @dragend="draggable = false"
           >
-            <v-icon>open_with</v-icon>
+            <v-icon>drag_indicator</v-icon>
           </v-btn>
           <v-btn
           icon
@@ -50,20 +51,21 @@
           <div id="select">
             <v-select
             dense
+            draggable="false"
             :disabled="chDisabled"
             :items="chList"
             :label="chLabel"
             v-model="channel"
             ></v-select>
           </div>
-          <v-btn
+          <!-- <v-btn
           color="success"
           icon
           :disabled="getDisabled"
           @click="getData"
           >
             <v-icon>show_chart</v-icon>
-          </v-btn>
+          </v-btn> -->
           <v-btn
           icon
           :color="getsColor"
@@ -220,8 +222,8 @@ import fs from 'fs';
 <style scoped>
   #toolbar{
     position: fixed;
-    left: 30px;
-    top: 100px;
+    left: 270px;
+    top: 10px;
     z-index: 1022;
     background-color: rgba(255, 255, 255, 0);
   }

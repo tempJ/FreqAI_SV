@@ -213,6 +213,10 @@ function genSeqArr(){
       ToolBar, ConfigSet,
       OverlayModal,
     },
+
+    props: {
+      config: Number
+    },
     
     name: 'DataChart',
 
@@ -236,7 +240,7 @@ function genSeqArr(){
       wave5: new Array(5),
       idx: null,
 
-      setIntervalTime: null,
+      // setIntervalTime: null,
 
       // socket
       // port: null,
@@ -576,9 +580,9 @@ function genSeqArr(){
       // },
 
       ///////////////////////////////////////////////////////////////////////////////////////
-      setConfig(e){
-        this.setIntervalTime = e;
-      },
+      // setConfig(e){
+      //   this.setIntervalTime = e;
+      // },
       async getIdx(e){
         this.chIdx = e;
 
@@ -642,20 +646,23 @@ function genSeqArr(){
     // watch: {
     // },
 
-    // computed: {
-    //   // wavePoint: function(){
-    //   //   const idx = this.wave;
-    //   //   const tmp = this.yData[idx];
-    //   //   this.pushData(this.waveData, tmp);
-    //   //   return tmp;
-    //   // }
-    // },
+    computed: {
+      setIntervalTime: function (){
+        return this.config;
+      }
+      // wavePoint: function(){
+      //   const idx = this.wave;
+      //   const tmp = this.yData[idx];
+      //   this.pushData(this.waveData, tmp);
+      //   return tmp;
+      // }
+    },
 
     mounted() {
       this.data2080 = this.genDataObj(xArr, new Array(size));
       this.data5 = [[], [], [], [], []];
       // this.wave = Array.from(new Array(5), x => false);
-      // this.wave[0] = 1024;
+      this.wave5[3] = 1024;
       // this.vPort = '1024';
       // this.vHost = 'localhost';
       // this.title[1] = 'Focus: ' + this.wave.toString();

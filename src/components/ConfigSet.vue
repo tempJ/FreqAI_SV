@@ -1,153 +1,228 @@
 <template>
-  <!-- <v-container> -->
-    <!-- <v-expansion-panels
-    class="panel"
-    dense
+  <v-container>
+    <v-card
     tile
     >
-      <v-expansion-panel>
-        <v-expansion-panel-header>Config</v-expansion-panel-header>
+      <v-navigation-drawer
+      app
+      permanent
+      v-model="drawer"
+      :mini-variant.sync="mini"
+      >
+      <!-- <v-list link> -->
+        <v-list-item>
 
-        <v-expansion-panel-content> -->
-          <v-row class="content">
-            <v-col cols="5">
-              <v-subheader>Interval</v-subheader>
-            </v-col>
-            <v-col cols="7">
-              <v-text-field
-              class="input"
-              dense
-              filled
-              rounded
-              suffix="ms"
-              v-model="vSetInterval"
-              :rules="rules.interval"
-              >
-              </v-text-field>
-            </v-col>
-          </v-row>
+        <!-- <v-list-item-title>John Leider</v-list-item-title> -->
+          <!-- <template v-slot:activator> -->
+            <!-- <v-list-item-icon
+            @click.stop="mini = !mini"
+            > -->
+            <v-btn
+            small
+            icon
+            plain
+            color="secondary"
+            @click.stop="mini = !mini"
+            >
+              <v-icon v-if="mini">mdi-chevron-right</v-icon>
+              <v-icon v-else>mdi-chevron-left</v-icon>
+            </v-btn>
+            <!-- </v-list-item-icon> -->
+          <!-- </template> -->
+        </v-list-item>
+      <!-- </v-list> -->
+        
 
-          <v-divider class="divider"></v-divider>
+        <v-divider></v-divider>
 
-          <v-row class="content">
-            <v-col cols="5">
-              <v-subheader>Integration</v-subheader>
-            </v-col>
-            <v-col cols="7">
-              <v-text-field
-              class="input"
-              dense
-              filled
-              rounded
-              suffix="ms"
-              v-model="vIntegration"
-              :rules="rules.integration"
-              >
-              </v-text-field>
-            </v-col>
-          </v-row>
+        <v-list
+        dense
+        >
+          <v-list-group>
+            <template v-slot:activator>
+              <v-list-item-icon>
+                <v-icon>waves</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Selected Wave</v-list-item-title>
+            </template>
 
-            <!-- <v-row>
-              <v-col cols="6">
-                <v-subheader>Interval</v-subheader>
-              </v-col>
-              <v-col cols="6">
+            <v-list-item>
+              <v-list-item-icon>
+                <v-icon>label</v-icon>
+              </v-list-item-icon>
+
+              <v-list-item-content>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+        </v-list>
+
+        <v-divider></v-divider>
+
+        <v-list
+        dense
+        >
+          <v-list-group>
+            <template v-slot:activator>
+              <v-list-item-icon>
+                <v-icon>list</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Config</v-list-item-title>
+            </template>
+          
+            <v-list-item>
+              <v-list-item-icon>
+                <v-icon>arrow_right</v-icon>
+              </v-list-item-icon>
+
+              <v-list-item-content>
                 <v-text-field
+                class="input"
                 dense
                 filled
                 rounded
+                prefix="Interval"
                 suffix="ms"
                 v-model="vSetInterval"
                 :rules="rules.interval"
                 >
                 </v-text-field>
-              </v-col>
-            </v-row>
+              </v-list-item-content>
+            </v-list-item>
 
-            <v-row>
-              <v-col cols="6">
-                <v-subheader>Integration</v-subheader>
-              </v-col>
-              <v-col cols="6">
+            <v-list-item>
+              <v-list-item-icon>
+                <v-icon>arrow_right</v-icon>
+              </v-list-item-icon>
+
+              <v-list-item-content>
                 <v-text-field
+                class="input"
                 dense
                 filled
                 rounded
+                prefix="Integration"
                 suffix="ms"
                 v-model="vIntegration"
                 :rules="rules.integration"
                 >
                 </v-text-field>
-              </v-col>
-            </v-row> -->
-            <div class="button">
-              <v-btn
-              text
-              rounded
-              color="success"
-              @click="setConfig"
-              >
-                <v-icon left>settings</v-icon>Set
-              </v-btn>
-              <v-btn
-              text
-              rounded
-              color="primary"
-              @click="saveConfig"
-              >
-                <v-icon left>save</v-icon>Save
-              </v-btn>
-            </div>
-            <!-- <v-row>
-            <div class="button">
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                  text
-                  rounded
-                  color="success"
-                  v-on="on"
-                  v-bind="attrs"
-                  @click="setConfig"
-                  > -->
-                    <!-- <v-icon left>settings</v-icon>Set
-                  </v-btn>
-                </template>
-                <span>Set config</span>
-              </v-tooltip>
-              <v-spacer></v-spacer>
-              &nbsp;
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                  text
-                  rounded
-                  color="primary"
-                  v-on="on"
-                  v-bind="attrs"
-                  @click="saveConfig"
-                  >
-                    <v-icon left>save</v-icon>Save
-                  </v-btn>
-                </template>
-                <span>Save config to json file</span>
-              </v-tooltip>
-            </div>
-            </v-row> -->
-          <!-- </v-card> -->
-        <!-- </v-expansion-panel-content>
-      </v-expansion-panel>
-    </v-expansion-panels> -->
-  <!-- </v-container> -->
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+        </v-list>
+
+        <v-divider></v-divider>
+
+        <template v-slot:append>
+          <v-list
+          dense
+          >
+            <v-list-item
+            link
+            @click="setConfig"
+            >
+              <v-list-item-icon>
+                <v-icon color="success">settings</v-icon>
+              </v-list-item-icon>
+
+              <v-list-item-content>
+                <v-list-item-title>Set</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+
+            <v-list-item
+            tile
+            link
+            @click="saveConfig"
+            >
+              <v-list-item-icon>
+                <v-icon color="primary">save</v-icon>
+              </v-list-item-icon>
+
+              <v-list-item-content>
+                <v-list-item-title>Save</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </template>
+
+      </v-navigation-drawer>
+      <!-- <DataChart/> -->
+    </v-card>
+    <!-- <v-row class="content">
+      <v-col cols="5">
+        <v-subheader>Interval</v-subheader>
+      </v-col>
+      <v-col cols="7">
+        <v-text-field
+        class="input"
+        dense
+        filled
+        rounded
+        suffix="ms"
+        v-model="vSetInterval"
+        :rules="rules.interval"
+        >
+        </v-text-field>
+      </v-col>
+    </v-row>
+
+    <v-divider class="divider"></v-divider>
+
+    <v-row class="content">
+      <v-col cols="5">
+        <v-subheader>Integration</v-subheader>
+      </v-col>
+      <v-col cols="7">
+        <v-text-field
+        class="input"
+        dense
+        filled
+        rounded
+        suffix="ms"
+        v-model="vIntegration"
+        :rules="rules.integration"
+        >
+        </v-text-field>
+      </v-col>
+    </v-row>
+
+    <div class="button">
+      <v-btn
+      text
+      rounded
+      color="success"
+      @click="setConfig"
+      >
+        <v-icon left>settings</v-icon>Set
+      </v-btn>
+      <v-btn
+      text
+      rounded
+      color="primary"
+      @click="saveConfig"
+      >
+        <v-icon left>save</v-icon>Save
+      </v-btn>
+    </div> -->
+  </v-container>
 </template>
 
 <script>
+// import DataChart from './DataChart';
 import fs from 'fs';
 
   export default {
+    // components: {
+    //   DataChart,
+    // },
     name: 'ConfigSet',
 
     data: () => ({
+      drawer: true,
+      mini: true,
+
       vSetInterval: null,
       vIntegration: null,
       // intervalTime: 100,
@@ -238,7 +313,7 @@ import fs from 'fs';
   height: 30px;
   /* align-items: center; */
   /* text-align: center; */
-  font-size: 14px;
+  font-size: 12px;
 }
 /* .footer{
   background-color: rgba(255, 255, 255, 0);

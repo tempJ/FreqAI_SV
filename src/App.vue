@@ -1,74 +1,24 @@
 <template>
   
   <v-app>
-    <!-- <div class="ma-12 pa-12"> -->
+    <!-- <v-navigation-drawer>
+      <v-card>d</v-card>
+    </v-navigation-drawer> -->
+    
+    <config-set
+    @config="sendConfig"
+    />
     <div
     @dragover="dragOver"
     @drop="dropOn"
     >
-    <v-card>
-      <v-navigation-drawer
-        permanent
-        expand-on-hover
-      >
-        <v-list>
-          <v-list-item class="px-2">
-            <v-list-item-avatar>
-              <v-img src="https://randomuser.me/api/portraits/women/85.jpg"></v-img>
-            </v-list-item-avatar>
-          </v-list-item>
+      <v-main>
+        <data-chart
+        :config="config"
+        />
+      </v-main>
+    </div>
 
-          <v-list-item link>
-            <v-list-item-content>
-              <v-list-item-title class="text-h6">
-                Sandra Adams
-              </v-list-item-title>
-              <v-list-item-subtitle>sandra_a88@gmail.com</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-
-        <v-divider></v-divider>
-
-        <v-list>
-          <config-set
-          @config="setConfig"
-          />
-        </v-list>
-        <!-- <div class="footer">
-          
-        </div> -->
-
-        <!-- <v-list
-          nav
-          dense
-        >
-          <v-list-item link>
-            <v-list-item-icon>
-              <v-icon>mdi-folder</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>My Files</v-list-item-title>
-          </v-list-item>
-          <v-list-item link>
-            <v-list-item-icon>
-              <v-icon>mdi-account-multiple</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Shared with me</v-list-item-title>
-          </v-list-item>
-          <v-list-item link>
-            <v-list-item-icon>
-              <v-icon>mdi-star</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Starred</v-list-item-title>
-          </v-list-item>
-        </v-list> -->
-      </v-navigation-drawer>
-    </v-card>
-  <!-- </div> -->
-
-    
-    
-    
     <!-- <v-card
     dense
     >
@@ -102,18 +52,18 @@
     v-model="tabPage"
     >
       <v-tab-item> -->
-        <v-main>
+        <!-- <v-main>
           <DataChart/>
-        </v-main>
+        </v-main> -->
       <!-- </v-tab-item>
     </v-tabs-items> -->
-    </div>
+    
   </v-app>
 </template>
 
 <script>
-import DataChart from './components/DataChart';
 import ConfigSet from './components/ConfigSet';
+import DataChart from './components/DataChart';
 
 export default {
   name: 'App',
@@ -124,6 +74,7 @@ export default {
   },
 
   data: () => ({
+    config: null,
     // tabPage: null,
     // tabList: ['Chart']
   }),
@@ -146,15 +97,17 @@ export default {
       obj.style.left = pageX - shiftX + 'px';
       obj.style.top = pageY - shiftY + 'px';
     },
+
+    sendConfig(e){
+      this.config = e;
+    }
   }
 };
 </script>
 
 <style scoped>
-  .footer{
-    position: fixed;
-    /* background-color: rgba(255, 255, 255, 0); */
-    /* :style="{'padding': '0px'}" */
-    /* margin-left: 50%; */
-  }
+  /* .navi{
+    background-color: rgba(255, 255, 255, 0);
+    z-index: 4096;
+  } */
 </style>
