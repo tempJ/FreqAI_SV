@@ -79,7 +79,9 @@
         <v-list
         dense
         >
-          <v-list-group>
+          <v-list-group
+          :value="true"
+          >
             <template v-slot:activator>
               <v-list-item-icon>
                 <v-icon>waves</v-icon>
@@ -212,12 +214,13 @@
               </template>
 
               <v-list-item>
-                <v-list-item-icon>
+                
+                <!-- <v-list-item-icon>
                   <v-checkbox
                   dense
                   v-model="recipe.auto.use"
                   ></v-checkbox>
-                </v-list-item-icon>
+                </v-list-item-icon> -->
 
                 <v-list-item-content>
                   <v-text-field
@@ -246,6 +249,14 @@
                   v-model="recipe.auto.threshold"
                   >
                   </v-text-field>
+
+                  <v-checkbox
+                  class="checkbox"
+                  dense
+                  hide-details
+                  label="Using auto save?"
+                  v-model="recipe.auto.use"
+                  ></v-checkbox>
                 </v-list-item-content>
               </v-list-item>
             </v-list-group>
@@ -253,6 +264,23 @@
             
           </v-list-group>
         </v-list>
+
+        <v-divider></v-divider>
+
+        <v-list
+        dense
+        >
+          <v-list-item
+          link
+          @click="loadCsv"
+          >
+            <v-list-item-icon>
+              <v-icon>file_upload</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Load .csv</v-list-item-title>
+          </v-list-item>
+        </v-list>
+        
 
         <v-divider></v-divider>
 
@@ -283,7 +311,7 @@
               </v-list-item-icon>
 
               <v-list-item-content>
-                <v-list-item-title>Set</v-list-item-title>
+                <v-list-item-title>Set Config</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
 
@@ -297,7 +325,7 @@
               </v-list-item-icon>
 
               <v-list-item-content>
-                <v-list-item-title>Save</v-list-item-title>
+                <v-list-item-title>Save Config</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -310,6 +338,8 @@
 <script>
 import fs from 'fs';
 // import { Console } from 'console';
+
+const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
 
   export default {
     // components: {
@@ -338,7 +368,7 @@ import fs from 'fs';
         path: 'C:/Users/Administrator/Documents/FreqAi SV/csv',
         interval: 100,
         integration: 25,
-        sampling: 100,
+        sampling: 1000,
         auto: {
           start: 0,
           end: 0,
@@ -393,7 +423,7 @@ import fs from 'fs';
 
     methods: {
       createConfig(){
-        fs.readFile('./config.json', 'utf-8', (err, data) => {
+        fs.readFile(configPath, 'utf-8', (err, data) => {
           if(err === null){
             Object.assign(this.recipe, JSON.parse(data));
             // console.log(this.recipe)
@@ -449,6 +479,15 @@ import fs from 'fs';
 
       },
 
+      loadCsv(){
+        const reader = new FileReader();
+        reader.onload = this.onFileLoad();
+        // reader.readAsDataURL()
+      },
+      onFileLoad(){
+
+      },
+
       setConfig(){
         Object.assign(this.config, this.recipe);
         // console.log('config:', this.config)
@@ -459,7 +498,8 @@ import fs from 'fs';
       saveConfig(){
         // const config = this.makeConfig();
 
-        fs.writeFile('./config.json', JSON.stringify(this.config), (err) => {
+
+        fs.writeFile(configPath, JSON.stringify(this.config), (err) => {
           if(err !== null){ return -1; }
         });
       },
@@ -567,6 +607,7 @@ import fs from 'fs';
         if(isNaN(interval) || isNaN(integration)){ return false; }
         if(interval <= 0){ return false; }
         if(interval < integration + 30){ return false; }
+
         return true;
       },
       // isValidIntegration(val, pre){
@@ -578,6 +619,16 @@ import fs from 'fs';
         if(isNaN(val)){ return false; }
         if(val <= 0){ return false; }
         // if(recipe.sampling){ return false; }
+        return true;
+      },
+      isValidThreshold(val){
+        // cur = parseInt(cur);
+        // console.log(cur)
+
+        if(isNaN(val)){ return false; }
+        if(val < 0){ return false; }
+        // if(cur > 0){ cur = 0; }
+
         return true;
       }
     },
@@ -639,6 +690,12 @@ import fs from 'fs';
         handler(val){
           const pre = this.config.auto;
           this.isValidWave(val, pre, true);
+
+          this.recipe.auto.threshold = parseInt(val.threshold);
+          if(!this.isValidThreshold(val)){
+            this.recipe.auto.threshold = pre.threshold;
+          }
+          // val.threshold = parseInt(val.threshold);
         }
       },
 
@@ -646,7 +703,7 @@ import fs from 'fs';
         deep: true,
 
         handler(val){
-          // console.log(val.name)
+          
           // const filePath = this.config.path;
           // fs.mkdir(`${filePath}`, () => {
           //   fs.writeFile(`${filePath}/${val.name}.csv`, "file", (err) => {
@@ -657,8 +714,9 @@ import fs from 'fs';
           //   });
           // });
           
-          if(val.data.length < 1){ return -1; }
-          if(!val.hold){
+          // if(val.data.length < 1){ return -1; }
+          // console.log(val.data)
+          if(val.isSave){
             const path = this.config.path;
             const file = val.prefix + '\r\n' + val.data.join('\r\n');
 
@@ -696,5 +754,13 @@ import fs from 'fs';
   /* align-items: center; */
   /* text-align: center; */
   font-size: 12px;
+}
+/* ::v-deep .input .v-model {
+  align-items: center;
+  text-align: center;
+} */
+::v-deep .checkbox .v-label{
+  font-size: 12px;
+  /* color: black; */
 }
 </style>

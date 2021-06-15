@@ -314,15 +314,17 @@ function genSeqArr(){
             // }
             if(this.isAutoSave && this.isHold){
               const date = new Date();
-              this.save.push(this.makeDateFormat(date) + '0, 0' +
+              this.save.push(this.makeDateFormat(date) + '0,0,' +
                 this.makeWatchFormat() + ',' + yArr.join(','));
             }
-            if(!this.isHold){
+            if(!this.isHold && this.save.length>0){
               const obj = new Object();
               obj.name = this.makeDateFormat(new Date(), true);
               obj.prefix = this.makeFileFormat1(this.config);
               obj.data = this.save;
-              obj.hold = this.isHold;
+              obj.isSave = !this.isHold;
+              // obj.hold = this.isHold;
+
               this.$emit("save", obj);
               this.save = [];
             }
@@ -398,11 +400,14 @@ function genSeqArr(){
         const wave = this.config.wave;
         const idx = this.data5.length - 1;
         const ret = [];
+
         wave.forEach((w, i) => {
           if(w.view){
+            // console.log(this.data5[i][idx])
             ret.push(this.data5[i][idx].y);
           }
         })
+        
         return ret.join(',');
       },
 

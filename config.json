@@ -1,1 +1,0 @@
-{"interval":100,"integration":25,"sampling":50,"auto":{"start":1000,"end":1024,"threshold":10000,"use":true},"wave":[{"view":true,"start":200,"end":230},{"view":false,"start":0,"end":30},{"view":false,"start":0,"end":0},{"view":false,"start":400,"end":2079},{"view":true,"start":0,"end":10}]}
