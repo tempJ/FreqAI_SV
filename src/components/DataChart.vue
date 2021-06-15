@@ -5,161 +5,31 @@
       :type="modal.type"
       :msg="modal.msg"
       />
-      <!-- <div
-      @dragover="dragOver"
-      @drop="dropOn"
-      > -->
         <tool-bar
         :channel="channel"
         :chList="chList"
-        :saveDatas="saveDatas"
+        :save="save"
         @init="initCh"
         @get="getData"
-        @gets="getDatas"
         @save="saveData"
         @chIdx="getIdx"
         />
 
-        <!-- <line-chart
-        :xData="xData"
-        :yData="yData"
-        @child="getWave"
-        /> -->
-
-        <line-chart
+        <wave-chart
         :data="data2080"
         @wave="getWave"
         />
 
-        <wave-chart
+        <watch-chart
         :data="data5"
         />
-        
-        <!-- <wave-chart
-        :sIdx="sIdx"
-        :timeData="timeData"
-        :waveData="waveData"
-        /> -->
-
-    <!-- <v-row>
-      <v-col cols="6">
-        <v-card
-        class="card"
-        tile
-        > -->
-          <!-- <div class="btn">
-            <v-btn
-            color="primary"
-            icon
-            :disabled="disabled.usb"
-            @click="openUsb"
-            >
-              <v-icon>usb</v-icon>
-            </v-btn>
-          </div> -->
-
-          <!-- <div class="btn">
-            <v-btn
-            color="primary"
-            icon
-            @click="openUsb"
-            >
-              <v-icon>usb</v-icon>
-            </v-btn>
-            <v-btn
-            color="success"
-            icon
-            :disabled="disabled.open"
-            @click="openSocket"
-            >
-              <v-icon>login</v-icon>
-            </v-btn>
-            <v-btn
-            color="error"
-            icon
-            :disabled="disabled.close"
-            @click="closeSocket"
-            >
-              <v-icon>close</v-icon>
-            </v-btn>
-          </div>
-        </v-card> -->
-
-        <!-- <v-card
-        class="card"
-        tile
-        >
-          <div class="body">
-            <v-text-field
-            label="Port"
-            :rules="rules.port"
-            v-model="vPort"
-            >{{ vPort }}
-            </v-text-field>
-            <v-text-field
-            label="Host"
-            :rules="rules.host"
-            v-model="vHost"
-            >{{ vHost }}
-            </v-text-field>
-          </div>
-        </v-card> -->
-      <!-- </v-col> -->
-      <!-- <v-col>
-        <v-card
-        class="card"
-        tile
-        > -->
-          <!-- <div class="data" v-for="w in wavePoint" :key="w">{{ w }}, </div> -->
-
-          <!-- <v-expansion-panels accordion><v-expansion-panel>
-          <v-expansion-panel-header>Recive Data</v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <v-simple-table>
-
-                  <tbody>
-                    <tr
-                    v-for="(item, idx) in yData"
-                    :key="idx"
-                    >
-                      <td :style="{'fontSize': '12px'}">{{ item }}</td>
-                    </tr>
-                  </tbody>
-
-              </v-simple-table>
-            </v-expansion-panel-content>
-          </v-expansion-panel></v-expansion-panels> -->
-        <!-- </v-card>
-      </v-col> -->
-    <!-- </v-row> -->
-    
-      
-      <!-- </div> -->
-
-      <!-- <template>
-        <v-footer
-        fixed
-        color="rgba(255, 255, 255, 0)"
-        :style="{'padding': '0px'}"
-        >
-        
-          <div class="footer">
-            <config-set
-            @config="setConfig"
-            />
-          </div>
-        </v-footer>
-      </template> -->
-      
-      
     </v-container>
-  
 </template>
 
 <script>
 // component
-import LineChart from './LineChart';
 import WaveChart from './WaveChart';
+import WatchChart from './WatchChart';
 
 import ToolBar from './ToolBar';
 import ConfigSet from './ConfigSet';
@@ -169,10 +39,6 @@ import OverlayModal from './OverlayModal';
 // module
 import ffi from 'ffi-napi';
 import ref from 'ref-napi';
-
-// back
-// const remote = window.electron.remote;
-// const { Socket } = remote.getGlobal('net');
 
 // constant
 const size = 2080;
@@ -185,10 +51,18 @@ const longPtr = ref.refType(ref.types.long);
 const SPdbUSBm = ffi.Library('./src/libs/SPdbUSBm', {
   'spTestAllChannels': [ 'short', [ 'short' ] ],
   'spGetAssignedChannelID': [ 'void', [ shortPtr ] ],
+
   'spSetupAllChannels': [ 'short', [ ] ],
+  'spSetupGivenChannel': [ 'short', [ 'short' ] ],
+
   'spInitAllChannels':  [ 'short', [ 'short' ] ],
+  'spInitGivenChannel':  [ 'short', [ 'short', 'short' ] ],
+
   'spSetIntEx':  [ 'short', [ 'long', 'short' ] ],
+
   'spCloseAllChannels': [ 'short', [ ] ],
+  'spCloseGivenChannel': [ 'short', [ 'short' ] ],
+
   'spReadDataEx':  [ 'short', [ longPtr, 'short' ] ],
 });
 
@@ -199,58 +73,47 @@ function genSeqArr(){
   }
   return tmp;
 }
-// function genZeroArr(){
-//   const tmp = [];
-//   for(let i=0; i<size; i++){
-//     tmp.push(0);
-//   }
-//   return tmp;
-// }
-
   export default {
     components: {
-      LineChart, WaveChart,
+      WaveChart, WatchChart,
       ToolBar, ConfigSet,
       OverlayModal,
     },
 
     props: {
-      config: Number
+      config: Object,
     },
     
     name: 'DataChart',
 
     data: () => ({
       isSave: false,
+      save: [],
 
       // chart
-      // xData: new Array(size),
-      // yData: new Array(size),
-      // yData: genZeroArr(), 
       data2080: null,
       data5: null,
+
+      // interval: 100,
+      // integration: 25,
       
       timeData: [],
-      saveDatas: [],
-      // waveData1: [],
-      timeIdx: 0,
-      // isWave: [],
-      isWave: false,
-      // waveData: [[], [], [], [], []],
-      wave5: new Array(5),
-      idx: null,
-
-      // setIntervalTime: null,
-
-      // socket
-      // port: null,
-      // host: null,
       
-      // socket: null,
+      timeIdx: 0,
+      // isWave: false,
+      // wave5: new Array(5),
+      // wave5: [new Array(2), new Array(2), new Array(2), new Array(2), new Array(2)],
+      // wave5: [
+      //   { view: false, start: 0, end: 0 },
+      //   { view: false, start: 0, end: 0 },
+      //   { view: false, start: 0, end: 0 },
+      //   { view: false, start: 0, end: 0 },
+      //   { view: false, start: 0, end: 0 },
+      // ],
+
+      // idx: null,
 
       // USB
-      // slotNum: null,
-      sIdx: 0,
       chIdx: null,
       channel: null,
       channels: null,
@@ -273,33 +136,26 @@ function genSeqArr(){
         this.modal.show = true;
         this.modal.type = type;
         this.modal.msg = msg;
+
+        this.modal.show = false;
+
+        // return -1;
       },
 
-      // Toolbar drag and drop
-      // dragOver(e){
-      //   e.preventDefault();
-      // },
-      // dropOn(e){
-      //   const targetId = e.dataTransfer.getData('targetId');
-      //   const shiftX = e.dataTransfer.getData('shiftX');
-      //   const shiftY = e.dataTransfer.getData('shiftY');
-
-      //   e.preventDefault();
-      //   this.moveAt(targetId, shiftX, shiftY, e.pageX, e.pageY);
-      // },
-      // moveAt(targetId, shiftX, shiftY, pageX, pageY){
-      //   const obj = document.getElementById(targetId);
-        
-      //   obj.style.left = pageX - shiftX + 'px';
-      //   obj.style.top = pageY - shiftY + 'px';
-      // },
-
       // Initialization
-      initAll(){
-        // this.slotNum = null;
+      initAll(isTimeClear = true){
+        this.chIdx = null;
         this.channel = null;
         this.channels = null;
         this.chList = [];
+        // 
+
+        if(isTimeClear){
+          clearInterval(this.timerId);
+          this.timeIdx = 0;
+          this.timeData = [];
+          this.timerId = null;
+        }
       },
 
       // Buffer
@@ -350,7 +206,7 @@ function genSeqArr(){
         if(e){
           const slot = await this.testChannel();
           if(slot < 0){
-            this.initAll();
+            // this.initAll();
             return this.displayModal('error', `Failed check channel`);
           }
 
@@ -358,48 +214,72 @@ function genSeqArr(){
           
           await this.assignChannel(ch);
           this.channels = this.buff2Arr(ch, 'short');
-          
-          // if(this.channels.length <= 0){
-          //   this.initAll();
-          //   return this.displayModal('error', `Not found any channel`);
-          // }
 
           this.channels.forEach((el) => {
             this.chList.push('#ch' + el.toString());
           })
           this.channel = this.chList[0];
+          // const ch = this.channels[e];
           
-          if(await this.setupChannel() < 0){
+          // if(await this.setupChannel() < 0){
+          //   this.initAll();
+          //   return this.displayModal('error', `Failed communication via the USB port`);
+          // }
+
+          // if(await this.initChannel() < 0){
+          //   this.initAll();
+          //   return this.displayModal('error', `Failed initialization`);
+          // }
+        }
+        else{
+          const ch = this.channels[this.chIdx];
+          if(await this.closeChannel(ch) >= 0){
+            // console.log('ds')
             this.initAll();
+            // console.log('dsf')
+            this.displayModal('success', `Closed all channels`);
+          }
+        }
+      },
+
+      async getData(e, isRun = false){
+        if(!isRun){
+          const ch = this.channels[this.chIdx];
+
+          if(await this.setupChannel(ch) < 0){
             return this.displayModal('error', `Failed communication via the USB port`);
           }
 
-          if(await this.initChannel() < 0){
-            this.initAll();
+          if(await this.initChannel(ch) < 0){
             return this.displayModal('error', `Failed initialization`);
           }
-        }
-        else{
-          if(await this.closeChannel() >= 0){
-            this.initAll();
-            return this.displayModal('success', `Closed all channels`);
+
+          if(e >= 0){
+            const ret = await this.setIntegration(ch);
+            if(ret < 0){
+              return this.displayModal('error', `Failed set integration time`);
+            }
           }
         }
-      },
 
-      async getData(){
         if(e){
-          const data = this.allocBuffer('long', size);
-          const ret = await this.readData(data, this.channels[this.chIdx]);
-          if(ret < 0){
-            return this.displayModal('error', `Failed get data`);
-          }
-          this.yData = this.buff2Arr(data, 'long');
-        }
-      },
+          // const ch = this.channels[this.chIdx];
 
-      async getDatas(e){
-        if(e){
+          // if(await this.setupChannel(ch) < 0){
+          //   return this.displayModal('error', `Failed communication via the USB port`);
+          // }
+
+          // if(await this.initChannel(ch) < 0){
+          //   return this.displayModal('error', `Failed initialization`);
+          // }
+
+          // if(e >= 0){
+          //   const ret = await this.setIntegration(ch);
+          //   if(ret < 0){
+          //     return this.displayModal('error', `Failed set integration time`);
+          //   }
+          // }
+
           this.timerId = setInterval(async () => {
             const data = this.allocBuffer('long', size);
             const ret = await this.readData(data, this.channels[this.chIdx]);
@@ -411,61 +291,42 @@ function genSeqArr(){
 
             if(this.isWave){ this.timeIdx++; }
 
-            this.wave5.forEach((w, i) => {
-              const t = this.timeIdx;
-              const y = yArr[w];
-              const tmp = new Object();
-              tmp.x = t;
-              tmp.y = y;
-              // this.waveData[i].push(this.);
-              this.data5[i].push(tmp);
-              // this.genDataObj()
+            const wave = this.config.wave;
+            const t = this.timeIdx;
+            // for((w, i) in wave){
+            //   if(w.view){
+            //     const y = (yArr[w.start] + yArr[w.end]) / 2;
+            //     const tmp = this.genDataObj([t], [y]);
+            //     this.data5[i].push(tmp[0]);
+            //   }
+            // }
+            wave.forEach((w, i) => {
+              if(w.view){
+                const y = (yArr[w.start] + yArr[w.end]) / 2;
+                const tmp = this.genDataObj([t], [y]);
+                this.data5[i].push(tmp[0]);
+              }
             })
-            
-            // if(this.isWave){
-            //   this.wave.forEach((w, i) => {
-                
-            //   })
-            // }
-            
 
-            // if(this.)
-
-            // if(this.isWave){
-            //   this.timeIdx++;
-            //   this.timeData.push(this.timeIdx);
-            //   // this.wave.forEach((w) => {
-            //   //   if(Number.isInteger(w)){}
-            //   // })
-            //   // for(let i=0; i<5; i++){
-            //   //   if(Number.isInteger(this.wave[i])){
-            //   //     this.waveData[i].push(this.yData[this.wave[i]]);
-            //   //   }
-            //   // }
-            //   this.waveData[0].push(this.yData[this.wave[0]]);
-            //   this.waveData[1].push(this.yData[this.wave[1]]);
-            //   this.waveData[2].push(this.yData[this.wave[2]]);
-            //   this.waveData[3].push(this.yData[this.wave[3]]);
-            //   this.waveData[4].push(this.yData[this.wave[4]]);
+            // if(this.isSave){
+            //   const timestamp = new Date().getTime();
+            //   this.save.push(timestamp.toString() + ',' + yArr.join(','));
             // }
-            // this.wave.forEach((w) => {
-            //   if(Number.isInteger(w)){}
-            // })
-            // if(this.wave.length > 0){
-            //   this.timeIdx++;
-              // this.timeData = new Date().getTime() / (this.setIntervalTime * 1000);
-              // this.timeData.push(this.timeIdx);
-              // this.waveData[0].push(this.yData[this.wave[0]]);
-              // console.log(this.timeData)
-              // console.log(this.waveData)
-            // }
-
-            if(this.isSave){
-              const timestamp = new Date().getTime();
-              this.saveDatas.push(timestamp.toString() + '\r\n' + yArr.join('\r\n'));
-              // console.log(this.saveDatas[this.saveDatas.length - 1].length)
+            if(this.isAutoSave && this.isHold){
+              const date = new Date();
+              this.save.push(this.makeDateFormat(date) + '0, 0' +
+                this.makeWatchFormat() + ',' + yArr.join(','));
             }
-          }, this.setIntervalTime);
+            if(!this.isHold){
+              const obj = new Object();
+              obj.name = this.makeDateFormat(new Date(), true);
+              obj.prefix = this.makeFileFormat1(this.config);
+              obj.data = this.save;
+              obj.hold = this.isHold;
+              this.$emit("save", obj);
+              this.save = [];
+            }
+          }, this.config.interval);
         }
         else{
           clearInterval(this.timerId);
@@ -474,10 +335,75 @@ function genSeqArr(){
       },
 
       saveData(e){
-        this.isSave = e;
-        if(!e){
-          this.saveDatas = [];
+        // this.isSave = e;
+        // if(e){
+        //   this.save.push(this.makeSaveForm(this.config));
+        // }
+        // else{
+        //   this.save = [];
+        // }
+      },
+
+      // makeSaveForm(recipe){
+      //   const prefix = 'Fileformat:1' + '\r\n'
+      //     + 'HWType:SPdbUSBm' + '\r\n'
+      //     + 'Start Time:' + date.toString() + '\r\n'
+      //     + 'Integration Time:' + recipe.integration.toString() + ','
+      //     + 'Interval:' + recipe.interval.toString() + ','
+      //     + 'Sampling Time:' + recipe.sampling.toString() + '\r\n';
+      //   return prefix;
+      // },
+
+      makeFileFormat1(recipe){
+        const date = new Date();
+
+        const wave = [];
+        this.config.wave.forEach(w => {
+          if(w.view){
+            wave.push((w.start === w.end)?
+              w.start.toString() : w.start.toString()+'~'+w.end.toString());
+          }
+        });
+
+        const prefix = 'Fileformat:1' + '\r\n'
+          + 'HWType:SPdbUSBm' + '\r\n'
+          + 'Start Time:' + this.makeDateFormat(date) + '\r\n'
+          + 'Integration Time:' + recipe.integration.toString() + ','
+          + 'Interval:' + recipe.interval.toString() + ','
+          + 'Sampling Time:' + recipe.sampling.toString() + '\r\n'
+          + 'Time, VI 0, VI 1,' + wave.join(',');
+
+        return prefix;
+      },
+
+      makeDateFormat(date, isFileName=false){
+        if(isFileName){
+          return date.getFullYear() + '_'
+            + date.getMonth() + '_'
+            + date.getDate() + '_'
+            + date.getHours() + date.getMinutes() + date.getSeconds();
         }
+        else{
+          return date.getFullYear() + '/'
+            + date.getMonth() + '/'
+            + date.getDate() + ' '
+            + date.getHours() + ':'
+            + date.getMinutes() + ':'
+            + date.getSeconds() + '.'
+            + date.getMilliseconds() + '(ms)';
+        }
+      },
+
+      makeWatchFormat(){
+        const wave = this.config.wave;
+        const idx = this.data5.length - 1;
+        const ret = [];
+        wave.forEach((w, i) => {
+          if(w.view){
+            ret.push(this.data5[i][idx].y);
+          }
+        })
+        return ret.join(',');
       },
 
       // SPdbUSBm.dll
@@ -493,26 +419,27 @@ function genSeqArr(){
         return ret;
       },
 
-      async setupChannel(){
-        const ret = await SPdbUSBm.spSetupAllChannels();
+      async setupChannel(ch){
+        const ret = await SPdbUSBm.spSetupGivenChannel(ch);
         console.log('setupChannel()');
         return ret;
       },
 
-      async initChannel(){
-        const ret = await SPdbUSBm.spInitAllChannels(0);
+      async initChannel(ch){
+        const ret = await SPdbUSBm.spInitGivenChannel(0, ch);
         console.log('initChannel()');
         return ret;
       },
 
-      async closeChannel(){
-        const ret = await SPdbUSBm.spCloseAllChannels();
+      async closeChannel(ch){
+        // const ret = await SPdbUSBm.spCloseAllChannels();
+        const ret = await SPdbUSBm.spCloseGivenChannel(ch);
         console.log('closeChannel()');
         return ret;
       },
 
       async setIntegration(ch){
-        const ret = await SPdbUSBm.spSetIntEx(25, ch);
+        const ret = await SPdbUSBm.spSetIntEx(this.config.integration, ch);
         console.log('setIntegration()');
         return ret;
       },
@@ -523,96 +450,39 @@ function genSeqArr(){
         return ret;
       },
 
-      // Socket method
-      // async openSocket(){
-      //   if(this.socket !== null){
-      //     return this.displayModal('error', `Current port: ${this.port}`);
-      //   }
-
-      //   if(this.vPort.length !== 4 || isNaN(this.vPort * 1)){
-      //     return this.displayModal('error', `Input valid port(4 digit): ${this.vPort}`);
-      //   }
-        
-      //   this.port = this.vPort * 1;
-      //   this.host = this.vHost;
-
-      //   // this.modal.show = false;
-      //   this.disabledBtn(true);
-
-      //   this.socket = new Socket();
-      //   this.socket.connect(this.port, this.host);
-
-      //   this.socket.on('connect', () => {
-      //     this.displayModal('success', `Success open port: ${this.vPort}`);
-      //     this.socket.write('true');
-
-      //     this.socket.on('data', (msg) => {
-      //       this.yData = msg.toString().split('\n');
-      //       this.pushSwitchLen(this.waveData, this.yData, this.wave);
-      //     })
-      //   });
-
-      //   this.socket.on('error', (err) => {
-      //     this.displayModal('error', err);
-      //     this.closeSocket();
-      //   });
-
-      //   this.socket.on('timeout', () => {
-      //     this.displayModal('warning', `Socket timeout`);
-      //     this.closeSocket();
-      //   });
-      // },
-
-      // closeSocket(){
-      //   if(this.socket === null){
-      //     return this.displayModal('error', `Current port is undefined`);
-      //   }
-
-      //   this.socket.end();
-      //   this.socket = null;
-
-      //   this.disabledBtn(false);
-      // },
-
-      // pushData(data, item){
-      //   if(data.length >= size){ data.shift(); }
-      //   data.push(item);
-      // },
-
-      ///////////////////////////////////////////////////////////////////////////////////////
-      // setConfig(e){
-      //   this.setIntervalTime = e;
-      // },
       async getIdx(e){
         this.chIdx = e;
+        // const ch = this.channels[e];
 
-        // if(e < 0){
-        //   return this.displayModal('error', `Not found ${this.channel}`);
+        // if(await this.setupChannel(ch) < 0){
+        //   return this.displayModal('error', `Failed communication via the USB port`);
         // }
-        if(e >= 0){
-          const ret = await this.setIntegration(this.channels[e]);
-          if(ret < 0){
-            return this.displayModal('error', `Failed set integration time`);
-          }
-        }
+
+        // if(await this.initChannel(ch) < 0){
+        //   return this.displayModal('error', `Failed initialization`);
+        // }
+
+        // if(e >= 0){
+        //   const ret = await this.setIntegration(ch);
+        //   if(ret < 0){
+        //     return this.displayModal('error', `Failed set integration time`);
+        //   }
+        // }
       },
+
       getWave(e){
-        const curr = e;
-        if(curr < 0 || curr >= size){
-          return this.displayModal('warning', `Click invalid wave point`);
-        }
-        this.wave5[this.sIdx] = curr;
-        if(!this.isWave){ this.isWave = true; }
-        // this.isWave = true;
-        // if(this.wave.length < 5){
-        //   this.wave.push(curr);
+        // const curr = e;
+        // if(curr < 0 || curr >= size){
+        //   return this.displayModal('warning', `Click invalid wave point`);
         // }
-        // else{
-        //   this.wave[0] = curr;
-        // }
-        // console.log(this.wave)
-        // this.pushSwitchLen(this.waveData, this.yData, this.wave);
+        // // this.wave5[this.sIdx] = curr;
+        // if(!this.isWave){ this.isWave = true; }
       },
+
+      // setWave(){
+
+      // },
+
       genDataObj(xArr, yArr){
         const tmp = [];
         const len = xArr.length;
@@ -624,65 +494,125 @@ function genSeqArr(){
         }
         return tmp;
       },
-      // pushSwitchLen(arr, data, idx){
-      //   const len = arr.length;
-      //   switch (len) {
-      //     case 5:
-      //       arr[4].push(data[idx[4]]);
-      //     case 4:
-      //       arr[3].push(data[idx[3]]);
-      //     case 3:
-      //       arr[2].push(data[idx[2]]);
-      //     case 2:
-      //       arr[1].push(data[idx[1]]);
-      //     case 1:
-      //       arr[0].push(data[idx[0]]);
-      //     default:
-      //       break;
-      //   }
-      // },
     },
 
-    // watch: {
-    // },
-
-    computed: {
-      setIntervalTime: function (){
-        return this.config;
-      }
-      // wavePoint: function(){
-      //   const idx = this.wave;
-      //   const tmp = this.yData[idx];
-      //   this.pushData(this.waveData, tmp);
-      //   return tmp;
+    watch: {
+      // 'config.interval': function(val){
+      //   // const tId = this.timerId;
+      //   console.log(val);
+      //   if(this.timerId !== null){
+      //     console.log(this.timerId);
+      //     clearInterval(this.timerId);
+      //     this.getData(true, true);
+      //     console.log(this.timerId);
+      //     // console.log
+      //   }
+      // },
+      config: {
+        deep: true,
+        handler(val){
+          // console.log('config');
+          console.log(val);
+        }
+      },
+      // interval: function(val){
+      //   console.log('interval')
+      //   console.log(val)
+      // }
+      // config: {
+      //   deep: true,
+      //   handler: function(){
+      //     console.log(this.config)
+      //   }
+      // }
+      // interval: function(){
+      //   clearInterval(this.timerId);
+      // },
+      // integration: async function(){
+      //   const ret = await this.setIntegration(this.channels[this.chIdx]);
+      //   if(ret < 0){
+      //     return this.displayModal('error', `Failed set integration time`);
+      //   }
+      //   console.log(this.integration);
+      // }
+      // setIntervalTime: function(){
+      //   if(this.timerId === null){ return -1; }
+      //   clearInterval(this.timerId);
+      //   this.getData(true);
       // }
     },
 
-    mounted() {
+    computed: {
+      // interval: function (){
+      //   return this.config.interval;
+      //   // const tmp = this.config.interval;
+      //   // console.log(tmp);
+      //   // if(this.timerId !== null){ clearInterval(this.timerId); }
+
+      //   // return tmp;
+      // },
+      // integration: async function (){
+      //   return this.config.integration;
+      //   // const tmp = this.config.integration;
+      //   // console.log(tmp);
+
+      //   // const ret = await this.setIntegration(this.channels[this.chIdx]);
+      //   // if(ret < 0){
+      //   //   return this.displayModal('error', `Failed set integration time`);
+      //   // }
+
+      //   // return tmp;
+      // },
+      // sampling: function (){
+      //   return this.config.sampling;
+      // },
+      isAutoSave: function(){
+        return this.config.auto.use;
+      },
+      isHold: function(){
+        const auto = this.config.auto;
+        // const isHold = (this.data2080[auto.start]+this.data2080[auto.end]/2 >= auto.threshold)?
+        //   true : false;
+        return (this.data2080[auto.start]+this.data2080[auto.end]/2 >= auto.threshold)?
+          true : false;
+      },
+      isWave: function(){
+        return this.config.wave.reduce((acc, cur) => {
+          if(acc.view !== undefined){ acc = acc.view; }
+          return acc || cur.view;
+        });
+        // this.config.wave.forEach((w) => {
+        //   if(w.view) { return true; }
+        // })
+        // return false;
+        // return this.config.wave[]
+      }
+    },
+
+    // beforeCreate() {
+    //   this.interval = 100;
+    //   this.integration = 25;
+    // },
+
+    created() {
       this.data2080 = this.genDataObj(xArr, new Array(size));
       this.data5 = [[], [], [], [], []];
-      // this.wave = Array.from(new Array(5), x => false);
-      this.wave5[3] = 1024;
-      // this.vPort = '1024';
-      // this.vHost = 'localhost';
-      // this.title[1] = 'Focus: ' + this.wave.toString();
+      // this.interval
+      // this.wave5[3] = 1024;
     }
   }
 </script>
 
 <style scoped>
   #toolbar{
-    position: fixed;
-    left: 30px;
-    top: 100px;
+    /* position: fixed; */
+    position: absolute;
+    /* off */
+    /* left: 30px;
+    top: 100px; */
     z-index: 1022;
     background-color: rgba(255, 255, 255, 0);
   }
-
-  /* #select{
-    padding: 10px 10px 0px 0px;
-    width: 120px;
-  } */
 
   .card {
     margin: 10px;

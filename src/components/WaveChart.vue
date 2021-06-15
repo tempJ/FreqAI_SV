@@ -16,9 +16,8 @@ import {
   SolidLine, SolidFill, ColorRGBA, Themes
 } from '@arction/lcjs';
 
-// const size = 2048;
 const colorSet = [
-  // ColorRGBA(41, 121, 255),
+  ColorRGBA(41, 121, 255),
   ColorRGBA(255, 23, 68),
   ColorRGBA(0, 191, 165),
   ColorRGBA(170, 0, 255),
@@ -29,14 +28,6 @@ const colorSet = [
   export default {
     props: {
       data: Array,
-      // sIdx: Number,
-      // timeData: Array,
-      // // waveData: Array,
-      // waveData1: Array,
-      // waveData2: Array,
-      // waveData3: Array,
-      // waveData4: Array,
-      // waveData5: Array,
     },
     name: 'WaveChart',
 
@@ -44,10 +35,8 @@ const colorSet = [
       chartId: null,
       db: null,
       chart: null,
-      series: new Array(5),
+      series: null,
       strokeTheme: [],
-
-      // themeList: [Themes.light, Themes.light]
     }),
 
     methods: {
@@ -69,7 +58,10 @@ const colorSet = [
           columnIndex: 0,
           rowIndex: 0,
         })
+          .disableAnimations(false)
           .setTitle('');
+
+        this.chart.onSeriesBackgroundMouseClick(this.getWavePoint);
 
         const xAxis = this.chart.getDefaultAxisX();
         xAxis.setChartInteractionPanByDrag(false);
@@ -85,53 +77,40 @@ const colorSet = [
         this.createSeries();
       },
       createSeries(){
-        for(let i=0; i<5; i++){
-          this.strokeTheme.push(new SolidLine({
-            fillStyle: new SolidFill({ color: colorSet[0] }),
-            thickness: 1
-          }));
-          this.series[i] = this.chart.addLineSeries().setStrokeStyle(this.strokeTheme[0]);
+        this.strokeTheme.push(new SolidLine({
+          fillStyle: new SolidFill({ color: colorSet[0] }),
+          thickness: 1
+        }));
+
+        this.series = this.chart.addLineSeries().setStrokeStyle(this.strokeTheme[0]);
+        // console.log(this.data)
+        // this.series.add(this.data);
+        // console.log(this.data)
+        // this.series.add(this.genDataObj(this.xData, this.yData));
+      },
+
+      getWavePoint(obj, e){
+        const cursor = obj.engine.clientLocation2Engine(e.clientX, e.clientY);
+        const near = obj.solveNearest(cursor);
+        if(near !== undefined){
+          const onScale = near.location;
+          this.$emit("wave", Math.floor(onScale.x));
         }
-        
-        // console.log(this.sIdx)
-        // console.log(this.waveData)
       },
       
       // renderChart(){
-      //   // console.log(this.waveData[this.sIdx])
-      //   if(this.timeData.length < 2){
-      //     return -1;
-      //   }
-      //   for(let i=0; i<5; i++){
-      //     if(this.waveData[i].length > 0){
-      //       this.series[i].clear();
-      //       this.series[i].add(this.genDataObj(this.timeData, this.waveData[i]));
-            
-      //     }
-      //   }
-      //   // console.log(this.genDataObj(this.timeData, this.waveData[0]))
-      //   // this.series.clear();
-      //   // this.series[0].add(this.genDataObj(this.timeData, this.waveData[0]));
-      //   // this.series[1].add(this.genDataObj(this.timeData, this.waveData[1]));
-      //   // this.series[2].add(this.genDataObj(this.timeData, this.waveData[2]));
-      //   // this.series[3].add(this.genDataObj(this.timeData, this.waveData[3]));
-      //   // this.series[4].add(this.genDataObj(this.timeData, this.waveData[4]));
+      //   this.series.clear();
+      //   // this.series.add(this.genDataObj(this.xData, this.yData));
+      //   this.series.add(this.data);
       // },
 
       // genDataObj(xArr, yArr){
       //   const tmp = [];
-      //   const lenX = xArr.length;
-      //   // const lenY = yArr.length;
-      //   // const interval = lenX - lenY;
-
-      //   for(let i=0; i<lenX; i++){
+      //   const len = xArr.length;
+      //   for(let i=0; i<len; i++){
       //     const item = new Object();
       //     item.x = xArr[i];
-      //     // if(i >= interval){
-      //     //   item.y = yArr[i-interval];
-      //     // }
-      //     item.y = yArr[i];
-      //     // item.y = parseInt(yArr[i]);
+      //     item.y = parseInt(yArr[i]);
       //     tmp.push(item);
       //   }
       //   return tmp;
@@ -139,22 +118,13 @@ const colorSet = [
     },
 
     watch: {
-      // 'waveData': 'renderChart',
-      // 'waveData1': 'renderChart1',
+      // 'yData': 'renderChart',
       data: {
         deep: true,
 
         handler(){
-          this.data.forEach((el, i) => {
-            this.series[i].clear();
-            this.series[i].add(el);
-          })
-          // for(let i=0; i<5; i++){
-          //   if(this.data[i].length < 1){ continue; }
-
-          //   this.series[i].clear();
-          //   this.series[i].add(this.data[i]);
-          // }
+          this.series.clear();
+          this.series.add(this.data);
         }
       }
     },
@@ -168,7 +138,7 @@ const colorSet = [
 
     mounted() {
       this.createDb();
-      // this.createChart();
+      
       // this.createSeries();
       // this.lightningChart = lightningChart();
       // this.chartXY = this.lightningChart.ChartXY({

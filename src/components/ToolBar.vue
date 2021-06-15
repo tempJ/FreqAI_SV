@@ -34,14 +34,15 @@
           >
             <v-icon>settings_power</v-icon>
           </v-btn>
-          <v-btn
+
+          <!-- <v-btn
           icon
           :color="saveColor"
           :disabled="saveDisabled"
           @click="saveData"
           >
             <v-icon>save</v-icon>
-          </v-btn>
+          </v-btn> -->
           
           <v-divider
           inset
@@ -68,11 +69,11 @@
           </v-btn> -->
           <v-btn
           icon
-          :color="getsColor"
-          :disabled="getsDisabled"
-          @click="getDatas"
+          :color="getColor"
+          :disabled="getDisabled"
+          @click="getData"
           >
-            <v-icon>{{ getsIcon }}</v-icon>
+            <v-icon>{{ getIcon }}</v-icon>
           </v-btn>
         </v-toolbar>
       </v-card>
@@ -87,7 +88,8 @@ import fs from 'fs';
     props: {
       channel: String,
       chList: Array,
-      saveDatas: Array
+      save: Array,
+      hold: Boolean,
     },
 
     name: 'ToolBar',
@@ -97,14 +99,14 @@ import fs from 'fs';
 
       initColor: 'success',
       
-      getsColor: 'success',
-      getsIcon: 'play_arrow',
+      getColor: 'success',
+      getIcon: 'play_arrow',
 
       saveColor: 'primary',
 
       chDisabled: true,
+      // getDisabled: true,
       getDisabled: true,
-      getsDisabled: true,
       saveDisabled: true,
 
       chLabel: 'Channel',
@@ -137,30 +139,30 @@ import fs from 'fs';
         }
 
         this.chDisabled = isTrue;
+        // this.getDisabled = isTrue;
         this.getDisabled = isTrue;
-        this.getsDisabled = isTrue;
         this.saveDisabled = isTrue;
       },
 
-      startGets(isStop = true){
+      startGet(isStop = true){
         if(isStop){
-          this.getsColor = 'error';
-          this.getsIcon = 'stop';
+          this.getColor = 'error';
+          this.getIcon = 'stop';
         }
         else{
-          this.getsColor = 'success';
-          this.getsIcon = 'play_arrow';
+          this.getColor = 'success';
+          this.getIcon = 'play_arrow';
         }
       },
 
-      startSave(isSave = true){
-        if(isSave){
-          this.saveColor = 'error';
-        }
-        else{
-          this.saveColor = 'primary';
-        }
-      },
+      // startSave(isSave = true){
+      //   if(isSave){
+      //     this.saveColor = 'error';
+      //   }
+      //   else{
+      //     this.saveColor = 'primary';
+      //   }
+      // },
 
       async initChannel(){
         if(this.initColor === 'success'){
@@ -168,53 +170,76 @@ import fs from 'fs';
           this.initToolbar(false);
         }
         else{
+          // console.log('d')
           this.$emit("init", false);
           this.initToolbar();
+          // console.log('s')
         }
       },
+
+      // async getData(){
+      //   this.get = true;
+      // },
 
       async getData(){
-        this.get = true;
-      },
-
-      async getDatas(){
-        if(this.getsColor === 'error'){
-          this.$emit("gets", false);
-          this.startGets(false);
+        if(this.getColor === 'error'){
+          this.$emit("get", false);
+          this.startGet(false);
         }
         else{
-          this.$emit("gets", true);
-          this.startGets();
+          this.$emit("get", true);
+          this.startGet();
         }
       },
 
-      saveData(){
-        if(this.saveColor === 'error'){
-          this.$emit("save", false);
+      // saveData(){
+      //   if(this.saveColor === 'error'){
+      //     this.$emit("save", false);
 
-          const filePath = './saveData';
-          const fileName = Math.round(new Date().getTime() / 1000);
-          const data = this.saveDatas.join(',');
+      //     const filePath = './saveData';
+      //     const fileName = Math.round(new Date().getTime() / 1000);
+      //     const data = this.save.join('\r\n');
 
-          fs.mkdir(`${filePath}`, () => {
-            fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
-              if(err !== null){ return -1; }
-              this.startSave(false);
-            });
-          });
+      //     fs.mkdir(`${filePath}`, () => {
+      //       fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
+      //         if(err !== null){ return -1; }
+      //         this.startSave(false);
+      //       });
+      //     });
+      //   }
+      //   else{
+      //     this.$emit("save", true);
+      //     this.startSave();
+      //   }
+      // },
 
-          
-        }
-        else{
-          this.$emit("save", true);
-          this.startSave();
-        }
-      },
+      // saveFile(){
+      //   if(hold){
+
+      //   }
+      // }
     },
     watch: {
       channel: function(){
         this.$emit("chIdx", this.chList.indexOf(this.channel));
-      }
+      },
+      // hold: function(val){
+      //   if(val){
+
+      //   }
+      //   else{
+      //     const filePath = './saveData';
+      //     const fileName = Math.round(new Date().getTime() / 1000);
+      //     const data = this.save.join('\r\n');
+
+      //     fs.mkdir(`${filePath}`, () => {
+      //       fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
+      //         if(err !== null){ return -1; }
+      //         this.startSave(false);
+      //       });
+      //     });
+      //   }
+      // }
     }
   }
 </script>

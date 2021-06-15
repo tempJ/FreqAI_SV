@@ -6,6 +6,7 @@
     </v-navigation-drawer> -->
     
     <config-set
+    :save="save"
     @config="sendConfig"
     />
     <div
@@ -13,9 +14,45 @@
     @drop="dropOn"
     >
       <v-main>
-        <data-chart
-        :config="config"
-        />
+        <!-- <v-row>
+          <v-col> -->
+            <data-chart
+            :config="config"
+            :set="set"
+            @save="saveFile"
+            />
+          <!-- </v-col>
+
+          <v-divider vertical></v-divider>
+          
+          <v-col>
+            <data-chart
+            :config="config"
+            :set="set"
+            />
+          </v-col>
+        </v-row>
+
+        <v-divider></v-divider>
+
+        <v-row>
+          <v-col>
+            <data-chart
+            :config="config"
+            :set="set"
+            />
+          </v-col>
+
+          <v-divider vertical></v-divider>
+          
+          <v-col>
+            <data-chart
+            :config="config"
+            :set="set"
+            />
+          </v-col>
+        </v-row> -->
+        
       </v-main>
     </div>
 
@@ -74,6 +111,8 @@ export default {
   },
 
   data: () => ({
+    set: false,
+    save: null,
     config: null,
     // tabPage: null,
     // tabList: ['Chart']
@@ -99,7 +138,13 @@ export default {
     },
 
     sendConfig(e){
+      // this.set = e;
       this.config = e;
+      // console.log(e)
+    },
+
+    saveFile(e){
+      this.save = e;
     }
   }
 };
