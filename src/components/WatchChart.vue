@@ -1,12 +1,13 @@
 <template>
-  <!-- <v-container> -->
+  <v-container>
+    <!-- <div>{{ data }}</div> -->
     <v-card
     flat
     tile
     >
       <div class="chart" :id="chartId"></div>
     </v-card>
-  <!-- </v-container> -->
+  </v-container>
 </template>
 
 <script>
@@ -136,8 +137,9 @@ const colorSet = [
       data: {
         deep: true,
 
-        handler(){
-          this.data.forEach((el, i) => {
+        handler(val){
+          console.log(val);
+          val.forEach((el, i) => {
             this.series[i].clear();
             this.series[i].add(el);
           })

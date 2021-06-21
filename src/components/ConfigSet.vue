@@ -264,22 +264,6 @@
             
           </v-list-group>
         </v-list>
-
-        <v-divider></v-divider>
-
-        <v-list
-        dense
-        >
-          <v-list-item
-          link
-          @click="loadCsv"
-          >
-            <v-list-item-icon>
-              <v-icon>file_upload</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Load .csv</v-list-item-title>
-          </v-list-item>
-        </v-list>
         
 
         <v-divider></v-divider>
@@ -337,7 +321,6 @@
 
 <script>
 import fs from 'fs';
-// import { Console } from 'console';
 
 const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
 
@@ -357,7 +340,8 @@ const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
       // dark: true,
       color: ['white', '#EEEEEE', 'normal'],
       // color: ['Red', 'Purple'],
-      num: 1,
+      // num: 1,
+      // file: [],
       // range: [1, 6],
 
       // vSetInterval: null,
@@ -479,15 +463,6 @@ const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
 
       },
 
-      loadCsv(){
-        const reader = new FileReader();
-        reader.onload = this.onFileLoad();
-        // reader.readAsDataURL()
-      },
-      onFileLoad(){
-
-      },
-
       setConfig(){
         Object.assign(this.config, this.recipe);
         // console.log('config:', this.config)
@@ -513,7 +488,7 @@ const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
 
       isValidWave(val, pre, isAuto=false){
         if(isAuto){
-          this.changeWave(val, pre)
+          this.changeWave(val, pre);
           // val.start = parseInt(val.start);
           // val.end = parseInt(val.end);
 
@@ -715,7 +690,7 @@ const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
           // });
           
           // if(val.data.length < 1){ return -1; }
-          // console.log(val.data)
+          console.log(val.data)
           if(val.isSave){
             const path = this.config.path;
             const file = val.prefix + '\r\n' + val.data.join('\r\n');

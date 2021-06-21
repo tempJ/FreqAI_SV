@@ -46,6 +46,7 @@ const xArr = genSeqArr();
 
 const shortPtr = ref.refType(ref.types.short);
 const longPtr = ref.refType(ref.types.long);
+const doublePtr = ref.refType(ref.types.double);
 
 // dll
 const SPdbUSBm = ffi.Library('./src/libs/SPdbUSBm', {
@@ -64,6 +65,9 @@ const SPdbUSBm = ffi.Library('./src/libs/SPdbUSBm', {
   'spCloseGivenChannel': [ 'short', [ 'short' ] ],
 
   'spReadDataEx':  [ 'short', [ longPtr, 'short' ] ],
+
+  'spPolyFit': [ 'short', [ doublePtr, doublePtr, 'short', doublePtr, 'short' ] ],
+  'spPolyCalc': [ 'void', [ doublePtr, 'short', 'double', doublePtr ] ],
 });
 
 function genSeqArr(){
@@ -286,6 +290,7 @@ function genSeqArr(){
             if(ret < 0){
               return this.displayModal('error', `Failed get data`);
             }
+
             const yArr = this.buff2Arr(data, 'long');
             this.data2080 = this.genDataObj(xArr, yArr);
 
@@ -302,20 +307,29 @@ function genSeqArr(){
             // }
             wave.forEach((w, i) => {
               if(w.view){
-                const y = (yArr[w.start] + yArr[w.end]) / 2;
-                const tmp = this.genDataObj([t], [y]);
-                this.data5[i].push(tmp[0]);
+                const start = this.wave2Idx(w.start),
+                  end = this.wave2Idx(w.end);
+
+                const avg = this.waveAverage(yArr, start, end);
+                (yArr[start] + yArr[end]) / 2;
+                const tmp = this.genDataObj([t], [avg])[0];
+                // console.log(tmp);
+                this.data5[i].push(tmp);
+                // this.data5[i] = tmp;
               }
-            })
+            });
+            // console.log(this.data5);
 
             // if(this.isSave){
             //   const timestamp = new Date().getTime();
             //   this.save.push(timestamp.toString() + ',' + yArr.join(','));
             // }
+            console.log(this.isAutoSave, this.isHold, this.save);
             if(this.isAutoSave && this.isHold){
+              console.log('saving...');
               const date = new Date();
-              this.save.push(this.makeDateFormat(date) + '0,0,' +
-                this.makeWatchFormat() + ',' + yArr.join(','));
+              this.save.push(this.makeDateFormat(date) + ',0,0,' +
+                this.makeWatchFormat(this.data5) + ',' + yArr.join(','));
             }
             if(!this.isHold && this.save.length>0){
               const obj = new Object();
@@ -326,6 +340,7 @@ function genSeqArr(){
               // obj.hold = this.isHold;
 
               this.$emit("save", obj);
+              console.log('success save');
               this.save = [];
             }
           }, this.config.interval);
@@ -346,6 +361,27 @@ function genSeqArr(){
         // }
       },
 
+      waveAverage(wave, start, end, isObj=false){
+        const len = end - start + 1;
+        const range = wave.slice(start, end + 1);
+        let ret = 0;
+
+        range.forEach((w) => {
+          if(isObj){ ret += w.y; }
+          else{ ret += w; }
+          // ret += w;
+        });
+
+        return ret / len;
+      },
+
+      idx2Wave(idx){
+        return idx;
+      },
+      wave2Idx(wave){
+        return wave;
+      },
+
       // makeSaveForm(recipe){
       //   const prefix = 'Fileformat:1' + '\r\n'
       //     + 'HWType:SPdbUSBm' + '\r\n'
@@ -362,49 +398,53 @@ function genSeqArr(){
         const wave = [];
         this.config.wave.forEach(w => {
           if(w.view){
-            wave.push((w.start === w.end)?
-              w.start.toString() : w.start.toString()+'~'+w.end.toString());
+            wave.push((w.start === w.end) ?
+              w.start.toString() : w.start.toString() + '~' + w.end.toString());
           }
         });
 
         const prefix = 'Fileformat:1' + '\r\n'
           + 'HWType:SPdbUSBm' + '\r\n'
           + 'Start Time:' + this.makeDateFormat(date) + '\r\n'
-          + 'Integration Time:' + recipe.integration.toString() + ','
-          + 'Interval:' + recipe.interval.toString() + ','
-          + 'Sampling Time:' + recipe.sampling.toString() + '\r\n'
-          + 'Time, VI 0, VI 1,' + wave.join(',');
+          + 'Integration Time:' + recipe.integration + ','
+          + 'Interval:' + recipe.interval + ','
+          + 'Sampling Time:' + recipe.sampling + '\r\n'
+          + 'Time,VI 0,VI 1,' + wave.join(',');
 
         return prefix;
       },
 
       makeDateFormat(date, isFileName=false){
+        const yyyy = '' + date.getFullYear(),
+          mm = ("0" + date.getMonth()).slice(-2),
+          dd = ("0" + date.getDate()).slice(-2),
+          hh = ("0" + date.getHours()).slice(-2),
+          MM = ("0" + date.getMinutes()).slice(-2),
+          ss = ("0" + date.getSeconds()).slice(-2),
+          zzz = ("00" + date.getMilliseconds()).slice(-3);
+        
         if(isFileName){
-          return date.getFullYear() + '_'
-            + date.getMonth() + '_'
-            + date.getDate() + '_'
-            + date.getHours() + date.getMinutes() + date.getSeconds();
+          return yyyy + mm + dd + '_' + hh + MM + ss;
         }
         else{
-          return date.getFullYear() + '/'
-            + date.getMonth() + '/'
-            + date.getDate() + ' '
-            + date.getHours() + ':'
-            + date.getMinutes() + ':'
-            + date.getSeconds() + '.'
-            + date.getMilliseconds() + '(ms)';
+          return yyyy + '/' + mm + '/' + dd + ' '
+            + hh + ':' + MM + ':' + ss + '.' + zzz + '(ms)';
         }
       },
 
-      makeWatchFormat(){
+      makeWatchFormat(data5){
         const wave = this.config.wave;
-        const idx = this.data5.length - 1;
+        // const idx = data5
+        // .length - 1;
+        // console.log(data5);
+        // const idx = this.data5.length - 1;
         const ret = [];
 
         wave.forEach((w, i) => {
           if(w.view){
+            const idx = data5[i].length - 1;
             // console.log(this.data5[i][idx])
-            ret.push(this.data5[i][idx].y);
+            ret.push(data5[i][idx].y);
           }
         })
         
@@ -450,6 +490,12 @@ function genSeqArr(){
       },
 
       async readData(p, ch){
+        const ret = await SPdbUSBm.spReadDataEx(p, ch);
+        console.log('readData()');
+        return ret;
+      },
+
+      async getWaveNm(p, ch){
         const ret = await SPdbUSBm.spReadDataEx(p, ch);
         console.log('readData()');
         return ret;
@@ -576,9 +622,13 @@ function genSeqArr(){
       },
       isHold: function(){
         const auto = this.config.auto;
-        // const isHold = (this.data2080[auto.start]+this.data2080[auto.end]/2 >= auto.threshold)?
+        const start = this.wave2Idx(auto.start),
+          end = this.wave2Idx(auto.end);
+        console.log(this.waveAverage(this.data2080, start, end, true));
+        
+        // return ((this.data2080[auto.start].y+this.data2080[auto.end].y)/2 >= auto.threshold)?
         //   true : false;
-        return (this.data2080[auto.start]+this.data2080[auto.end]/2 >= auto.threshold)?
+        return (this.waveAverage(this.data2080, start, end, true) >= auto.threshold)?
           true : false;
       },
       isWave: function(){
