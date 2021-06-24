@@ -6,8 +6,12 @@
     </v-navigation-drawer> -->
     
     <config-set
+    :run="run"
+    :table="table"
     :save="save"
+    :limit="limit"
     @config="sendConfig"
+    @snack="getSnack"
     />
     <div
     @dragover="dragOver"
@@ -16,10 +20,14 @@
       <v-main>
         <!-- <v-row>
           <v-col> -->
-            <data-chart
+            <data-view
             :config="config"
             :set="set"
+            @run="sendRun"
+            @table="sendTable"
+            @limit="sendLimit"
             @save="saveFile"
+            @snack="getSnack"
             />
           <!-- </v-col>
 
@@ -55,6 +63,25 @@
         
       </v-main>
     </div>
+
+    <v-snackbar
+    shaped
+    :color="(snack.suc === 0)? 'primary' : ((snack.suc === -1)? 'error' : 'success')"
+    v-model="snackbar"
+    timeout=3000
+    >
+    {{ snack.msg }}
+      <template v-slot:action="{ attrs }">
+        <v-btn
+        icon
+        color="white"
+        v-bind="attrs"
+        @click="snackbar = false"
+        >
+          <v-icon>close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
 
     <!-- <v-card
     dense
@@ -100,20 +127,32 @@
 
 <script>
 import ConfigSet from './components/ConfigSet';
-import DataChart from './components/DataChart';
+import DataView from './components/DataView';
 
 export default {
   name: 'App',
 
   components: {
     ConfigSet,
-    DataChart,
+    DataView,
   },
 
   data: () => ({
+    run: false,
     set: false,
+    limit: {
+      'min': 160.0,
+      'max': 187.0
+    },
+    table: null,
     save: null,
     config: null,
+
+    snackbar: false,
+    snack: {
+      suc: 0,
+      msg: '',
+    }
     // tabPage: null,
     // tabList: ['Chart']
   }),
@@ -137,15 +176,42 @@ export default {
       obj.style.top = pageY - shiftY + 'px';
     },
 
+    sendRun(e){
+      this.run = e;
+    },
+
+    sendTable(e){
+      this.table = e;
+      // console.log(e);
+    },
+
     sendConfig(e){
-      // this.set = e;
       this.config = e;
-      // console.log(e)
+      console.log(e);
     },
 
     saveFile(e){
       this.save = e;
+      console.log(e);
+    },
+
+    sendLimit(e){
+      this.limit = e;
+      console.log(e);
+    },
+
+    getSnack(e){
+      this.snack = e;
+      // console.log(e);
+      this.snackbar = true;
     }
+  },
+  created() {
+    console.log('> created App')
+  },
+
+  mounted() {
+    console.log('> mounted App')
   }
 };
 </script>

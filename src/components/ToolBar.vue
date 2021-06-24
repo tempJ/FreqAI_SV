@@ -1,19 +1,15 @@
 <template droppable="true">
     <v-container>
-      <!-- <div
-      @dragover="dragOver"
-      @drop="dropOn"
-      > -->
       <v-card
       id="toolbar"
       flat
       tile
+      width="320px"
       :draggable="draggable"
       @dragstart="dragStart"
       >
         <v-toolbar
-        elevation="2"
-        dense
+        elevation="1"
         >
           <v-btn
           icon
@@ -27,93 +23,60 @@
           >
             <v-icon>drag_indicator</v-icon>
           </v-btn>
+
+          <v-select
+          class="select"
+          dense
+          outlined
+          prefix="Channel:"
+          draggable="false"
+          :disabled="ready"
+          :items="chList"
+          v-model="selCh"
+          ></v-select>
+
           <v-btn
           icon
           :color="initColor"
           @click="initChannel"
           >
-            <v-icon>settings_power</v-icon>
+            <v-icon>power_settings_new</v-icon>
           </v-btn>
 
-          <!-- <v-btn
-          icon
-          :color="saveColor"
-          :disabled="saveDisabled"
-          @click="saveData"
-          >
-            <v-icon>save</v-icon>
-          </v-btn> -->
-          
-          <v-divider
-          inset
-          vertical
-          ></v-divider>
-          
-          <div id="select">
-            <v-select
-            dense
-            draggable="false"
-            :disabled="chDisabled"
-            :items="chList"
-            :label="chLabel"
-            v-model="channel"
-            ></v-select>
-          </div>
-          <!-- <v-btn
-          color="success"
-          icon
-          :disabled="getDisabled"
-          @click="getData"
-          >
-            <v-icon>show_chart</v-icon>
-          </v-btn> -->
           <v-btn
           icon
           :color="getColor"
-          :disabled="getDisabled"
+          :disabled="ready"
           @click="getData"
           >
             <v-icon>{{ getIcon }}</v-icon>
           </v-btn>
         </v-toolbar>
       </v-card>
-      <!-- </div> -->
     </v-container>
 </template>
 
 <script>
-import fs from 'fs';
-
   export default {
     props: {
-      channel: String,
       chList: Array,
-      save: Array,
-      hold: Boolean,
     },
 
     name: 'ToolBar',
 
     data: () => ({
       draggable: false,
+      ready: true,
 
       initColor: 'success',
       
       getColor: 'success',
       getIcon: 'play_arrow',
 
-      saveColor: 'primary',
-
-      chDisabled: true,
-      // getDisabled: true,
-      getDisabled: true,
-      saveDisabled: true,
-
-      chLabel: 'Channel',
+      selCh: null,
     }),
 
     methods: {
-      // Toolbar drag and drop
       dragStart(e){
         const target = e.target.parentElement.parentElement.parentElement;
         const targetId = target.id;
@@ -131,17 +94,22 @@ import fs from 'fs';
       initToolbar(isTrue = true){
         if(isTrue){
           this.initColor = 'success';
-          this.chLabel = 'Channel';
         }
         else{
           this.initColor = 'error';
-          this.chLabel = null;
         }
+        this.ready = isTrue;
+      },
 
-        this.chDisabled = isTrue;
-        // this.getDisabled = isTrue;
-        this.getDisabled = isTrue;
-        this.saveDisabled = isTrue;
+      initChannel(){
+        if(this.initColor === 'success'){
+          this.$emit("init", true);
+          this.initToolbar(false);
+        }
+        else{
+          this.$emit("init", false);
+          this.initToolbar();
+        }
       },
 
       startGet(isStop = true){
@@ -155,33 +123,7 @@ import fs from 'fs';
         }
       },
 
-      // startSave(isSave = true){
-      //   if(isSave){
-      //     this.saveColor = 'error';
-      //   }
-      //   else{
-      //     this.saveColor = 'primary';
-      //   }
-      // },
-
-      async initChannel(){
-        if(this.initColor === 'success'){
-          this.$emit("init", true);
-          this.initToolbar(false);
-        }
-        else{
-          // console.log('d')
-          this.$emit("init", false);
-          this.initToolbar();
-          // console.log('s')
-        }
-      },
-
-      // async getData(){
-      //   this.get = true;
-      // },
-
-      async getData(){
+      getData(){
         if(this.getColor === 'error'){
           this.$emit("get", false);
           this.startGet(false);
@@ -191,70 +133,37 @@ import fs from 'fs';
           this.startGet();
         }
       },
-
-      // saveData(){
-      //   if(this.saveColor === 'error'){
-      //     this.$emit("save", false);
-
-      //     const filePath = './saveData';
-      //     const fileName = Math.round(new Date().getTime() / 1000);
-      //     const data = this.save.join('\r\n');
-
-      //     fs.mkdir(`${filePath}`, () => {
-      //       fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
-      //         if(err !== null){ return -1; }
-      //         this.startSave(false);
-      //       });
-      //     });
-      //   }
-      //   else{
-      //     this.$emit("save", true);
-      //     this.startSave();
-      //   }
-      // },
-
-      // saveFile(){
-      //   if(hold){
-
-      //   }
-      // }
     },
+
     watch: {
-      channel: function(){
-        this.$emit("chIdx", this.chList.indexOf(this.channel));
+      chList: {
+        deep: true,
+
+        handler(val){
+          if(val.length > 0) {
+            this.selCh = val[0];
+          }
+        }
       },
-      // hold: function(val){
-      //   if(val){
 
-      //   }
-      //   else{
-      //     const filePath = './saveData';
-      //     const fileName = Math.round(new Date().getTime() / 1000);
-      //     const data = this.save.join('\r\n');
-
-      //     fs.mkdir(`${filePath}`, () => {
-      //       fs.writeFile(`${filePath}/${fileName}.csv`, data, (err) => {
-      //         if(err !== null){ return -1; }
-      //         this.startSave(false);
-      //       });
-      //     });
-      //   }
-      // }
-    }
+      selCh(val){
+        this.$emit("selCh", this.chList.indexOf(val));
+      }
+    },
   }
 </script>
 
 <style scoped>
   #toolbar{
     position: fixed;
-    left: 270px;
+    left: 340px;
     top: 10px;
     z-index: 1022;
     background-color: rgba(255, 255, 255, 0);
   }
-  #select{
-    margin: 0px 0px 0px 10px;
-    padding: 10px 10px 0px 10px;
-    width: 120px;
+  .select{
+    font-size: 15px;
+    margin: 10px;
+    height: 24px;
   }
 </style>

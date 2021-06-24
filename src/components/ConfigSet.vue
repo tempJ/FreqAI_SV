@@ -6,31 +6,14 @@
       <v-navigation-drawer
       app
       permanent
-      width="280px"
-      v-model="drawer"
+      width="320px"
       :color="color[theme]"
       :dark="(theme === 2)? true : false"
       >
-      <!-- <v-navigation-drawer
-      app
-      permanent
-      width="280px"
-      v-model="drawer"
-      :dark="dark"
-      :mini-variant.sync="mini"
-      > -->
         <v-list-item>
-          <!-- <v-btn
-          small
-          icon
-          plain
-          @click.stop="mini = !mini"
-          >
-            <v-icon v-if="mini">mdi-chevron-right</v-icon>
-            <v-icon v-else>mdi-chevron-left</v-icon>
-          </v-btn> -->
 
           <v-spacer></v-spacer>
+          
           <v-btn
           small
           icon
@@ -39,40 +22,6 @@
             <v-icon>lightbulb</v-icon>
           </v-btn>
         </v-list-item>
-        
-        <!-- <v-divider></v-divider>
-
-        <v-list
-        dense
-        >
-          <v-list-item>
-            <v-list-item-icon>
-              {{ num }}
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-slider
-              dense
-              min="1"
-              max="6"
-              v-model="num"
-              >
-              </v-slider>
-            </v-list-item-content>
-          </v-list-item>
-
-          <v-list-item>
-            <v-list-item-icon>
-              <v-icon></v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-combobox
-              dense
-              >
-              </v-combobox>
-            </v-list-item-content>
-          </v-list-item>
-
-        </v-list> -->
 
         <v-divider></v-divider>
 
@@ -89,44 +38,57 @@
               <v-list-item-title>Selected Wave</v-list-item-title>
             </template>
 
-            <v-list-item v-for="(w, i) in recipe.wave" :key="i">
-              <v-list-item-icon>
-                <v-checkbox
-                dense
-                v-model="w.view"
-                ></v-checkbox>
-              </v-list-item-icon>
-
+            <v-list-item
+            v-for="(el, i) in range"
+            :key="i"
+            >
               <v-list-item-content>
-                <!-- <v-simple-table
-                dense
-                link="false"
-                > -->
-                  <!-- <template v-slot:default> -->
-                    <tbody>
-                      <tr>
-                        <td>
-                          <v-text-field
-                          class="input"
-                          dense
-                          type="number"
-                          v-model="w.start"
-                          >
-                          </v-text-field>
-                        </td>
-                        <td>
-                          <v-text-field
-                          class="input"
-                          dense
-                          type="number"
-                          v-model="w.end"
-                          >
-                          </v-text-field>
-                        </td>
-                      </tr>
-                    </tbody>
-                  <!-- </template> -->
-                <!-- </v-simple-table> -->
+                <v-row>
+                  <v-col sm="2">
+                    <v-checkbox
+                    hide-details
+                    :disabled="run"
+                    v-model="series[i]"
+                    ></v-checkbox>
+                  </v-col>
+                  <v-col>
+                    <v-row style="margin: 0px;">
+                      <v-col style="padding: 0px">
+                        <v-range-slider
+                        hide-details
+                        single-line
+                        :disabled="run"
+                        v-model="range[i]"
+                        min="0"
+                        max="2047"
+                        ></v-range-slider>
+                      </v-col>
+                    </v-row>
+
+                    <v-row style="margin: 0px;">
+                      <v-col sm="6" style="padding: 3px">
+                      <b-form-spinbutton
+                      class="spin"
+                      :disabled="run"
+                      v-model="el[0]"
+                      :formatter-fn="wLTable"
+                      min="0"
+                      :max="el[1]"
+                      ></b-form-spinbutton>
+                      </v-col>
+                      <v-col sm="6" style="padding: 3px">
+                        <b-form-spinbutton
+                        class="spin"
+                        :disabled="run"
+                        v-model="el[1]"
+                        :formatter-fn="wLTable"
+                        :min="el[0]"
+                        max="2047"
+                        ></b-form-spinbutton>
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                </v-row>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -148,10 +110,6 @@
             </template>
 
             <v-list-item>
-              <!-- <v-list-item-icon>
-                <v-icon></v-icon>
-              </v-list-item-icon> -->
-
               <v-list-item-content>
                 <v-text-field
                 class="input"
@@ -159,17 +117,16 @@
                 type="number"
                 prefix="Interval Time:"
                 suffix="ms"
-                v-model="recipe.interval"
+                :disabled="run"
+                v-model="interval"
+                @blur="checkComp"
+                @keyup.enter="checkComp"
                 >
                 </v-text-field>
               </v-list-item-content> 
             </v-list-item>
 
             <v-list-item>
-              <!-- <v-list-item-icon>
-                <v-icon></v-icon>
-              </v-list-item-icon> -->
-
               <v-list-item-content>
                 <v-text-field
                 class="input"
@@ -177,17 +134,16 @@
                 type="number"
                 prefix="Integration Time:"
                 suffix="ms"
-                v-model="recipe.integration"
+                :disabled="run"
+                v-model="integration"
+                @blur="checkComp"
+                @keyup.enter="checkComp"
                 >
                 </v-text-field>
               </v-list-item-content>
             </v-list-item>
 
             <v-list-item>
-              <!-- <v-list-item-icon>
-                <v-icon></v-icon>
-              </v-list-item-icon> -->
-
               <v-list-item-content>
                 <v-text-field
                 class="input"
@@ -195,7 +151,10 @@
                 type="number"
                 prefix="Sampling Time:"
                 suffix="ms"
-                v-model="recipe.sampling"
+                :disabled="run"
+                v-model="sampling"
+                @blur="checkComp"
+                @keyup.enter="checkComp"
                 >
                 </v-text-field>
               </v-list-item-content>
@@ -214,39 +173,48 @@
               </template>
 
               <v-list-item>
-                
-                <!-- <v-list-item-icon>
-                  <v-checkbox
-                  dense
-                  v-model="recipe.auto.use"
-                  ></v-checkbox>
-                </v-list-item-icon> -->
-
                 <v-list-item-content>
-                  <v-text-field
-                  class="input"
-                  dense
-                  type="number"
-                  prefix="Wavelength Range Start:"
-                  v-model="recipe.auto.start"
-                  >
-                  </v-text-field>
+                  <v-row style="margin: 0px;">
+                    <v-col style="padding: 0px">
+                      <v-range-slider
+                      hide-details
+                      single-line
+                      v-model="auto"
+                      min="0"
+                      max="2047"
+                      ></v-range-slider>
+                    </v-col>
+                  </v-row>
 
-                  <v-text-field
-                  class="input"
-                  dense
-                  type="number"
-                  prefix="Wavelength Range End:"
-                  v-model="recipe.auto.end"
-                  >
-                  </v-text-field>
+                  <v-row style="margin: 0px;">
+                    <v-col sm="6" style="padding: 3px">
+                    <b-form-spinbutton
+                    class="spin"
+                    v-model="auto[0]"
+                    :formatter-fn="wLTable"
+                    min="0"
+                    :max="auto[1]"
+                    ></b-form-spinbutton>
+                    </v-col>
+                    <v-col sm="6" style="padding: 3px">
+                      <b-form-spinbutton
+                      class="spin"
+                      v-model="auto[1]"
+                      :formatter-fn="wLTable"
+                      :min="auto[0]"
+                      max="2047"
+                      ></b-form-spinbutton>
+                    </v-col>
+                  </v-row>
 
                   <v-text-field
                   class="input"
                   dense
                   type="number"
                   prefix="Threshold:"
-                  v-model="recipe.auto.threshold"
+                  v-model="threshold"
+                  @blur="checkComp"
+                  @keyup.enter="checkComp"
                   >
                   </v-text-field>
 
@@ -255,32 +223,16 @@
                   dense
                   hide-details
                   label="Using auto save?"
-                  v-model="recipe.auto.use"
+                  v-model="use"
                   ></v-checkbox>
                 </v-list-item-content>
               </v-list-item>
             </v-list-group>
 
-            
           </v-list-group>
         </v-list>
         
-
         <v-divider></v-divider>
-
-        <v-list
-        dense
-        >
-          <v-list-item
-          link
-          @click="openSetting"
-          >
-            <v-list-item-icon>
-              <v-icon>settings</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>Settings</v-list-item-title>
-          </v-list-item>
-        </v-list>
 
         <template v-slot:append>
           <v-list
@@ -288,10 +240,11 @@
           >
             <v-list-item
             link
+            :disabled="run"
             @click="setConfig"
             >
               <v-list-item-icon>
-                <v-icon color="success">settings</v-icon>
+                <v-icon color="success">tune</v-icon>
               </v-list-item-icon>
 
               <v-list-item-content>
@@ -312,6 +265,16 @@
                 <v-list-item-title>Save Config</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+
+            <v-list-item
+            link
+            @click="openSetting"
+            >
+              <v-list-item-icon>
+                <v-icon>settings</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Settings</v-list-item-title>
+            </v-list-item>
           </v-list>
         </template>
       </v-navigation-drawer>
@@ -323,354 +286,245 @@
 import fs from 'fs';
 
 const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
+const snack = {
+  'config': {
+    'found': { suc: 1, msg: 'config.json found and loaded.' },
+    'notfound': { suc: -1, msg: 'config.json not found, so loaded default values.' },
+    'set': { suc: 1, msg: 'Set config' },
+    'save': { suc: 0, msg: 'Save config.json' }
+  },
+  'save': { suc: 1, msg: 'Save file: '}
+};
 
   export default {
-    // components: {
-    //   DataChart,
-    // },
     props: {
-      save: Object
+      run: Boolean,
+      table: Array,
+      limit: Object,
+      save: Object,
     },
     name: 'ConfigSet',
 
     data: () => ({
-      drawer: true,
-      mini: true,
-      theme: 1,
-      // dark: true,
+      theme: 0,
       color: ['white', '#EEEEEE', 'normal'],
-      // color: ['Red', 'Purple'],
-      // num: 1,
-      // file: [],
-      // range: [1, 6],
 
-      // vSetInterval: null,
-      // vIntegration: null,
-      // vSampling: null,
-      config: new Object(),
+      interval: 100,
+      integration: 25,
+      sampling: 1000,
+
+      threshold: 10000,
+      use: true,
+
+      wL: null,
+      auto: [1000, 1024],
+      series: [true, true, true, true, true],
+      range: [
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+      ],
+
       recipe: {
         path: 'C:/Users/Administrator/Documents/FreqAi SV/csv',
         interval: 100,
         integration: 25,
         sampling: 1000,
         auto: {
-          start: 0,
-          end: 0,
+          start: 548,
+          end: 557,
           threshold: 10000,
           use: true
         },
         wave: [
-          { view: false, start: 0, end: 0 },
-          { view: false, start: 0, end: 0 },
-          { view: false, start: 0, end: 0 },
-          { view: false, start: 0, end: 0 },
-          { view: false, start: 0, end: 0 },
+          { view: true, start: 0, end: 0 },
+          { view: true, start: 0, end: 0 },
+          { view: true, start: 0, end: 0 },
+          { view: true, start: 0, end: 0 },
+          { view: true, start: 0, end: 0 },
         ],
       },
-
-      // interval: null,
-      // integration: null,
-      // sampling: null,
-      // intervalTime: 100,
-      // integrationTime: 1000,
-      // check: new Array(5),
-      // wave: new Array(5),
-      // wave: [
-      //   { view: false, start: 0, end: 0 },
-      //   { view: false, start: 0, end: 0 },
-      //   { view: false, start: 0, end: 0 },
-      //   { view: false, start: 0, end: 0 },
-      //   { view: false, start: 0, end: 0 },
-      // ],
-
-      rules: {
-        interval: [
-          value => !!value || 'Required',
-          value => (value && value < 9999 && !isNaN(value*1)) || 'Input valid interval time',
-        ],
-        integration: [
-          value => !!value || 'Required',
-          value => (value && value < 9999 && !isNaN(value*1)) || 'Input valid integration time',
-        ],
-        sampling: [
-          value => !!value || 'Required',
-          value => (value && value < 9999 && !isNaN(value*1)) || 'Input valid sampling time',
-        ],
-        // start: [
-        //   // value => (value && value < 9999 && !isNaN(value*1)) || 'Input valid wave',
-        // ],
-        // end: [
-        //   // value => (value && value < 9999 && !isNaN(value*1)) || 'Input valid wave',
-        // ],
-      }
     }),
 
     methods: {
       createConfig(){
         fs.readFile(configPath, 'utf-8', (err, data) => {
-          if(err === null){
+          try{
             Object.assign(this.recipe, JSON.parse(data));
-            // console.log(this.recipe)
-            // const config = JSON.parse(data);
-            
-            // this.interval = parseInt(config.interval);
-            // this.integration = parseInt(config.integration);
-            // this.sampling = parseInt(config.sampling);
-
-            // if(config.wave.length !== undefined){
-            //   config.wave.forEach((w, i) => {
-            //     this.wave[i].view = w.view;
-            //     this.wave[i].start = parseInt(w.start);
-            //     this.wave[i].end = parseInt(w.end);
-            //   });
-            // }
-            
+            this.$emit("snack", snack.config.found);
           }
-          // else{
-            // this.interval = 100;
-            // this.integration = 1000;
-            // this.sampling = 1000;
-          // }
-          this.setConfig();
-          // console.log('configset:', this.recipe)
-          // console.log('configset2:', this.config)
-          // Object.assign(this.config, this.recipe);
-          // this.$emit("config", this.config);
+          catch(err){
+            this.$emit("snack", snack.config.notfound);
+          }
+
+          this.recipe = this.checkRecipe(this.recipe);
+          this.recp2Comp(this.recipe);
+
+          this.$emit("config", this.recipe);
         });
       },
 
-      // makeConfig(){
-      //   const config = new Object();
-
-      //   config.interval = parseInt(this.interval);
-      //   config.integration = parseInt(this.integration);
-      //   config.sampling = parseInt(this.sampling);
-
-      //   const arr = [];
-      //   this.wave.forEach((w) => {
-      //     const tmp = new Object();
-      //     tmp.view = w.view;
-      //     tmp.start = parseInt(w.start);
-      //     tmp.end = parseInt(w.end);
-      //     arr.push(tmp);
-      //   });
-
-      //   config.wave = arr;
-        
-      //   return config;
-      // },
       openSetting() {
 
       },
 
       setConfig(){
-        Object.assign(this.config, this.recipe);
-        // console.log('config:', this.config)
-        // this.$emit("set", true);
-        this.$emit("config", this.config);
+        this.recipe = this.checkRecipe(this.comp2Recp());
+        this.$emit("config", this.recipe);
+        this.$emit("snack", snack.config.set);
       },
 
       saveConfig(){
-        // const config = this.makeConfig();
-
-
-        fs.writeFile(configPath, JSON.stringify(this.config), (err) => {
+        this.recipe = this.checkRecipe(this.comp2Recp());
+        fs.writeFile(configPath, JSON.stringify(this.recipe), (err) => {
           if(err !== null){ return -1; }
+          this.$emit("snack", snack.config.save);
         });
       },
 
-      // convRecipe(){
-      //   const recipe = this.recipe;
-      //   this.recipe.interval = parseInt(recipe.interval);
-      //   this.recipe.integration = parseInt(recipe.integration);
-      //   this.recipe.sampling = parseInt(recipe.sampling);
-      // },
+      checkRecipe(recp){
+        const ret = new Object();
+        Object.assign(ret, recp);
 
-      isValidWave(val, pre, isAuto=false){
-        if(isAuto){
-          this.changeWave(val, pre);
-          // val.start = parseInt(val.start);
-          // val.end = parseInt(val.end);
+        ret.interval = parseInt(ret.interval);
+        ret.integration = parseInt(ret.integration);
+        ret.sampling = parseInt(ret.sampling);
+        console.log(ret.auto);
 
-          // if(isNaN(val.start)){ val.start = pre.start; }
-          // if(isNaN(val.end)){ val.end = pre.end; }
+        ret.auto.start = this.roundWL(parseFloat(ret.auto.start));
+        ret.auto.end = this.roundWL(parseFloat(ret.auto.end));
+        ret.auto.threshold = parseInt(ret.auto.threshold);
+        ret.auto.use = this.checkBool(ret.auto.use);
 
-          // if(val.start > val.end){
-          //   const tmp = val.end;
-          //   val.end = val.start;
-          //   val.start = tmp;
-          // }
-          // if(val.start < 0 || val.start === null){ val.start = 0; }
-          // if(val.end >= 2080 || val.end === null){ val.end = 2079; }
+        if(ret.auto.start > ret.auto.end){
+          const tmp = ret.auto.start;
+          ret.auto.start = ret.auto.end;
+          ret.auto.end = tmp;
         }
-        else{
-          val.forEach((w, i) => {
-            this.changeWave(w, pre[i]);
-          });
-          // val.forEach((w, i) => {
-          //   w.start = parseInt(w.start);
-          //   w.end = parseInt(w.end);
 
-          //   if(isNaN(w.start)){ w.start = pre[i].start; }
-          //   if(isNaN(w.end)){ w.end = pre[i].end; }
+        ret.wave.forEach((el) => {
+          el.view = this.checkBool(el.view);
+          el.start = this.roundWL(parseFloat(el.start));
+          el.end = this.roundWL(parseFloat(el.end));
 
-          //   if(w.start > w.end){
-          //     const tmp = w.end;
-          //     w.end = w.start;
-          //     w.start = tmp;
-          //   }
-          //   if(w.start < 0 || w.start === null){ w.start = 0; }
-          //   if(w.end >= 2080 || w.end === null){ w.end = 2079; }
-          // });
+          if(el.start > el.end){
+            const tmp = el.start;
+            el.start = el.end;
+            el.end = tmp;
+          }
+        });
+
+        return ret;
+      },
+
+      recp2Comp(recipe){
+        this.interval = recipe.interval;
+        this.integration = recipe.integration;
+        this.sampling = recipe.sampling;
+
+        this.auto[0] = this.wL.indexOf(recipe.auto.start);
+        this.auto[1] = this.wL.indexOf(recipe.auto.end);
+        this.threshold = recipe.auto.threshold;
+        this.use = recipe.auto.use;
+
+        this.range.forEach((el, i) => {
+          this.series[i] = recipe.wave[i].view;
+          el[0] = this.wL.indexOf(recipe.wave[i].start);
+          el[1] = this.wL.indexOf(recipe.wave[i].end);
+        });
+      },
+
+      comp2Recp(){
+        const recipe = new Object();
+
+        recipe.interval = this.interval;
+        recipe.integration = this.integration;
+        recipe.sampling = this.sampling;
+
+        recipe.auto = {
+          start: this.wL[this.auto[0]],
+          end: this.wL[this.auto[1]],
+          threshold: this.threshold,
+          use: this.use
+        };
+
+        recipe.wave = this.range.map((el, i) => {
+          return {
+            view: this.series[i],
+            start: this.wL[el[0]],
+            end: this.wL[el[1]]
+          };
+        });
+
+        return recipe;
+      },
+
+      checkBool(val){
+        const type = typeof val;
+
+        if(type === 'boolean'){ return val; }
+        else if(type === 'number'){ return (val < 1)? false : true; }
+        else if(type === 'string'){
+          const str = val.toLowerCase();
+          if(str === 'true' || str === 't'){ return true; }
+          else if(str === 'false' || str === 'f'){ return false; }
+          else{ return true; }
         }
-        
+        else{ return true; }
       },
-      changeWave(cur, pre){
-        cur.start = parseInt(cur.start);
-        cur.end = parseInt(cur.end);
 
-        if(isNaN(cur.start)){ cur.start = pre.start; }
-        if(isNaN(cur.end)){ cur.end = pre.end; }
+      wLTable(val){
+        return this.wL[val].toFixed(2);
+      },
 
-        if(cur.start > cur.end){
-          const tmp = cur.end;
-          cur.end = cur.start;
-          cur.start = tmp;
+      roundWL(wave){
+        const table = this.wL;
+
+        const find = table.find((el) => el >= wave);
+        const up = (find === undefined)? table[table.length - 1] : find;
+
+        const indexOf = table.indexOf(up);
+        const down = table[(indexOf === 0)? 0 : indexOf - 1];
+
+        return ((up-wave) > (wave-down))? down : up;
+      },
+
+      checkComp(){
+        let interval = parseInt(this.interval);
+        let integration = parseInt(this.integration);
+        let sampling = parseInt(this.sampling);
+        let threshold = parseInt(this.threshold);
+        
+        if(isNaN(interval) || interval < 1){ interval = 100; }
+        if(isNaN(integration) || integration < 1){ integration = 25; }
+        if(isNaN(sampling) || sampling < 1){ sampling = 1000; }
+        if(isNaN(threshold) || threshold < 1){ threshold = 10000; }
+
+        if(interval < integration){
+          const tmp = interval;
+          interval = integration;
+          integration = tmp;
         }
-        if(cur.start < 0 || cur.start === null){ cur.start = 0; }
-        if(cur.end >= 2080 || cur.end === null){ cur.end = 2079; }
-      },
+        if(interval-integration < 30){
+          integration = (integration > 30)? integration - 30 : integration;
+          interval = (integration > 30)? interval : interval + 30;
+        }
 
-      // isValidAuto(auto){
-      //   const preStart = this.config.auto.start;
-      //   const preEnd = this.config.auto.end;
-      //   const start = parseInt(auto.start);
-      //   const end = parseInt(auto.end);
-      //   if(isNaN(start)){ }
-
-        
-
-      //   if(end >= start){
-      //     this.recipe.auto.start = start;
-      //     this.recipe.auto.end = end;
-      //   }
-      //   else{
-      //     this.recipe.auto.start = end;
-      //     this.recipe.auto.end = start;
-      //   }
-      // },
-
-      // isValidRecipe(){
-      //   // const recipe = this.recipe;
-      //   // const config = this.config;
-        
-      //   // if(recipe.interval<=0 ||){
-      //   //   this.recipe.interval = config.interval;
-      //   // }
-      //   // if(recipe.integration<=0){
-      //   //   this.recipe.integration = config.integration;
-      //   // }
-      //   // if(recipe.sampling<=0){
-      //   //   this.recipe.sampling = config.sampling;
-      //   // }
-
-      //   // if(recipe.interval < recipe.integration + 30){}
-      //   // console.log(this.recipe)
-      // },
-
-      isValidInt(interval, integration){
-        if(isNaN(interval) || isNaN(integration)){ return false; }
-        if(interval <= 0){ return false; }
-        if(interval < integration + 30){ return false; }
-
-        return true;
-      },
-      // isValidIntegration(val, pre){
-      //   if(recipe.integration <= 0){ return false; }
-      //   if(recipe.integration >= recipe.interval - 30){ return false; }
-      //   return true;
-      // },
-      isValidSampling(val){
-        if(isNaN(val)){ return false; }
-        if(val <= 0){ return false; }
-        // if(recipe.sampling){ return false; }
-        return true;
-      },
-      isValidThreshold(val){
-        // cur = parseInt(cur);
-        // console.log(cur)
-
-        if(isNaN(val)){ return false; }
-        if(val < 0){ return false; }
-        // if(cur > 0){ cur = 0; }
-
-        return true;
+        this.interval = interval;
+        this.integration = integration;
+        this.sampling = sampling;
+        this.threshold = threshold;
       }
     },
 
     watch: {
-      // theme: function (val){
-      //   console.log(val)
-      // },
-      // recipe: {
-      //   deep: true,
-
-      //   handler(){
-      //     this.isValidWave();
-      //     // this.convRecipe();
-      //   }
-      // },
-      'recipe.wave': {
+      table: {
         deep: true,
 
         handler(val){
-          const pre = this.config.wave;
-          this.isValidWave(val, pre);
-        }
-      },
-
-      'recipe.interval': function(val){
-        const pre = this.config.interval;
-        this.recipe.interval = parseInt(val);
-
-        // console.log('curr:', val);
-        if(!this.isValidInt(val, this.recipe.integration)){
-          this.recipe.interval = pre;
-        }
-      },
-
-      'recipe.integration': function(val){
-        const pre = this.config.integration;
-        this.recipe.integration = parseInt(val);
-
-        // console.log('curr:', val);
-        if(!this.isValidInt(val, this.recipe.integration)){
-          this.recipe.integration = pre;
-        }
-      },
-
-      'recipe.sampling': function(val){
-        const pre = this.config.sampling;
-        this.recipe.sampling = parseInt(val);
-
-        // console.log('curr:', val);
-        if(!this.isValidSampling(val)){
-          this.recipe.sampling = pre;
-        }
-      },
-
-      'recipe.auto': {
-        deep: true,
-
-        handler(val){
-          const pre = this.config.auto;
-          this.isValidWave(val, pre, true);
-
-          this.recipe.auto.threshold = parseInt(val.threshold);
-          if(!this.isValidThreshold(val)){
-            this.recipe.auto.threshold = pre.threshold;
-          }
-          // val.threshold = parseInt(val.threshold);
+          if(val.length > 0) { this.wL = val; }
         }
       },
 
@@ -678,47 +532,37 @@ const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
         deep: true,
 
         handler(val){
-          
-          // const filePath = this.config.path;
-          // fs.mkdir(`${filePath}`, () => {
-          //   fs.writeFile(`${filePath}/${val.name}.csv`, "file", (err) => {
-          //     console.log('ing')
-          //     if(err !== null){ console.log(err);
-          //     return -1; }
-          //     console.log('success')
-          //   });
-          // });
-          
-          // if(val.data.length < 1){ return -1; }
-          console.log(val.data)
-          if(val.isSave){
-            const path = this.config.path;
-            const file = val.prefix + '\r\n' + val.data.join('\r\n');
+          const path = this.recipe.path;
+          const file = val.prefix + '\r\n' + val.data.join('\r\n');
 
-            fs.mkdir(`${path}`, () => {
-              fs.writeFile(`${path}/${val.name}.csv`, file, (err) => {
-                if(err !== null){ return -1; }
+          fs.mkdir(`${path}`, () => {
+            fs.writeFile(`${path}/${val.name}.csv`, file, (err) => {
+              if(err !== null){
+                this.$emit("snack", { suc: -1, msg: err });
+                return -1;
+              }
+
+              this.$emit("snack", {
+                suc: snack.save.suc,
+                msg: snack.save.msg + val.name + '.csv'
               });
             });
-          }
+          });
         }
-      }
+      },
     },
 
     computed: {
-      // setIntervalTime(){
-      //   return parseInt(this.vSetInterval)
-      // },
-      // integrationTime(){
-      //   return parseInt(this.vIntegration)
-      // },
-      // samplingTime(){
-      //   return parseInt(this.vSampling)
-      // }
+
     },
 
     created() {
+      console.log('> created ConfigSet');
       this.createConfig();
+      this.wL = new Array(2048).fill(0).map((el, i) => { return i; });
+    },
+    mounted() {
+      console.log('> mounted ConfigSet');
     }
   }
 </script>
@@ -726,16 +570,13 @@ const configPath = 'C:/Users/Administrator/Documents/FreqAi SV/config.json';
 <style scoped>
 .input {
   height: 30px;
-  /* align-items: center; */
-  /* text-align: center; */
   font-size: 12px;
 }
-/* ::v-deep .input .v-model {
-  align-items: center;
-  text-align: center;
-} */
+.spin {
+  height: 32px;
+  font-size: 12px;
+}
 ::v-deep .checkbox .v-label{
   font-size: 12px;
-  /* color: black; */
 }
 </style>

@@ -5,10 +5,10 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-const net = require('net');
+// const net = require('net');
 // const ffi = require('ffi-napi');
 
-global.net = net;
+// global.net = net;
 // global.ffi = ffi;
 
 // Scheme must be registered before the app is ready
@@ -50,10 +50,17 @@ async function createWindow() {
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
+  // alert('asdf')
+  // return -1;
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
+
+// app.on('before-quit', (event) => {
+//   alert('asdf');
+//   event.preventDefault();
+// })
 
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
@@ -76,6 +83,8 @@ app.on('ready', async () => {
   createWindow()
 })
 
+// app.close()
+
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
@@ -90,3 +99,5 @@ if (isDevelopment) {
     })
   }
 }
+
+app.setName('FreqAI SV');

@@ -1,6 +1,5 @@
 <template>
   <v-container>
-    <!-- <div>{{ data }}</div> -->
     <v-card
     flat
     tile
@@ -28,7 +27,9 @@ const colorSet = [
 
   export default {
     props: {
+      name: Array,
       data: Array,
+      clear: Boolean,
     },
     name: 'WatchChart',
 
@@ -36,16 +37,17 @@ const colorSet = [
       chartId: null,
       db: null,
       chart: null,
-      series: new Array(5),
-      strokeTheme: [],
 
-      // themeList: [Themes.light, Themes.light]
+      series: new Array(5),
+      legend: null,
+      strokeTheme: [],
     }),
 
     methods: {
       resetChartID(){
         this.chartId = Math.trunc(Math.random() * 1000000);
       },
+
       createDb(){
         this.db = lightningChart().Dashboard({
           container: `${this.chartId}`,
@@ -56,6 +58,7 @@ const colorSet = [
 
         this.createChart();
       },
+
       createChart(){
         this.chart = this.db.createChartXY({
           columnIndex: 0,
@@ -63,6 +66,8 @@ const colorSet = [
         })
           .disableAnimations(false)
           .setTitle('');
+
+        this.legend = this.chart.addLegendBox();
 
         const xAxis = this.chart.getDefaultAxisX();
         xAxis.setChartInteractionPanByDrag(false);
@@ -85,70 +90,41 @@ const colorSet = [
           }));
           this.series[i] = this.chart.addLineSeries().setStrokeStyle(this.strokeTheme[i]);
         }
-        
-        // console.log(this.sIdx)
-        // console.log(this.waveData)
       },
-      
-      // renderChart(){
-      //   // console.log(this.waveData[this.sIdx])
-      //   if(this.timeData.length < 2){
-      //     return -1;
-      //   }
-      //   for(let i=0; i<5; i++){
-      //     if(this.waveData[i].length > 0){
-      //       this.series[i].clear();
-      //       this.series[i].add(this.genDataObj(this.timeData, this.waveData[i]));
-            
-      //     }
-      //   }
-      //   // console.log(this.genDataObj(this.timeData, this.waveData[0]))
-      //   // this.series.clear();
-      //   // this.series[0].add(this.genDataObj(this.timeData, this.waveData[0]));
-      //   // this.series[1].add(this.genDataObj(this.timeData, this.waveData[1]));
-      //   // this.series[2].add(this.genDataObj(this.timeData, this.waveData[2]));
-      //   // this.series[3].add(this.genDataObj(this.timeData, this.waveData[3]));
-      //   // this.series[4].add(this.genDataObj(this.timeData, this.waveData[4]));
-      // },
-
-      // genDataObj(xArr, yArr){
-      //   const tmp = [];
-      //   const lenX = xArr.length;
-      //   // const lenY = yArr.length;
-      //   // const interval = lenX - lenY;
-
-      //   for(let i=0; i<lenX; i++){
-      //     const item = new Object();
-      //     item.x = xArr[i];
-      //     // if(i >= interval){
-      //     //   item.y = yArr[i-interval];
-      //     // }
-      //     item.y = yArr[i];
-      //     // item.y = parseInt(yArr[i]);
-      //     tmp.push(item);
-      //   }
-      //   return tmp;
-      // },
     },
 
     watch: {
-      // 'waveData': 'renderChart',
-      // 'waveData1': 'renderChart1',
+      name: {
+        deep: true,
+
+        handler(val){
+          console.log(val);
+          this.legend.dispose();
+          this.legend = this.chart.addLegendBox();
+
+          this.series.forEach((s, i) => {
+            s.setName(val[i]);
+          });
+          this.legend.add(this.chart);
+        }
+      },
+
       data: {
         deep: true,
 
         handler(val){
           console.log(val);
+          if(val[0].length === 0){
+            this.series.forEach((s) => {
+              s.clear();
+            });
+
+            return -1;
+          }
           val.forEach((el, i) => {
             this.series[i].clear();
             this.series[i].add(el);
-          })
-          // for(let i=0; i<5; i++){
-          //   if(this.data[i].length < 1){ continue; }
-
-          //   this.series[i].clear();
-          //   this.series[i].add(this.data[i]);
-          // }
+          });
         }
       }
     },
@@ -162,15 +138,6 @@ const colorSet = [
 
     mounted() {
       this.createDb();
-      // this.createChart();
-      // this.createSeries();
-      // this.lightningChart = lightningChart();
-      // this.chartXY = this.lightningChart.ChartXY({
-      //   // chartContainer
-      // });
-      // this.series = this.chartXY.addLineSeries();
-      // const tmp = this.genDataObj(this.xData, this.yData);
-      // this.series.add(tmp);
     }
   }
 </script>

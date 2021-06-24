@@ -35,6 +35,7 @@ const colorSet = [
       chartId: null,
       db: null,
       chart: null,
+
       series: null,
       strokeTheme: [],
     }),
@@ -83,10 +84,6 @@ const colorSet = [
         }));
 
         this.series = this.chart.addLineSeries().setStrokeStyle(this.strokeTheme[0]);
-        // console.log(this.data)
-        // this.series.add(this.data);
-        // console.log(this.data)
-        // this.series.add(this.genDataObj(this.xData, this.yData));
       },
 
       getWavePoint(obj, e){
@@ -97,28 +94,9 @@ const colorSet = [
           this.$emit("wave", Math.floor(onScale.x));
         }
       },
-      
-      // renderChart(){
-      //   this.series.clear();
-      //   // this.series.add(this.genDataObj(this.xData, this.yData));
-      //   this.series.add(this.data);
-      // },
-
-      // genDataObj(xArr, yArr){
-      //   const tmp = [];
-      //   const len = xArr.length;
-      //   for(let i=0; i<len; i++){
-      //     const item = new Object();
-      //     item.x = xArr[i];
-      //     item.y = parseInt(yArr[i]);
-      //     tmp.push(item);
-      //   }
-      //   return tmp;
-      // },
     },
 
     watch: {
-      // 'yData': 'renderChart',
       data: {
         deep: true,
 
@@ -138,15 +116,6 @@ const colorSet = [
 
     mounted() {
       this.createDb();
-      
-      // this.createSeries();
-      // this.lightningChart = lightningChart();
-      // this.chartXY = this.lightningChart.ChartXY({
-      //   // chartContainer
-      // });
-      // this.series = this.chartXY.addLineSeries();
-      // const tmp = this.genDataObj(this.xData, this.yData);
-      // this.series.add(tmp);
     }
   }
 </script>
